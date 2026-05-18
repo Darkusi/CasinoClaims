@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweepstakes Monitor — Free SC & Spins Alerts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="moneyMatrix"></canvas>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="#" class="logo" data-page="home">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Sweepstakes Monitor</span>
+        </a>
+        <div class="nav-links" id="navTabs">
+            <button class="nav-tab active" data-page="home">Home</button>
+            <button class="nav-tab" data-page="plans">Plans</button>
+            <button class="nav-tab" data-page="features">Features</button>
+            <button class="nav-tab" data-page="testimonials">Testimonials</button>
+            <button class="nav-tab" data-page="pros">Pros</button>
+            <button class="nav-tab" data-page="profile">Profile</button>
+            <button class="nav-tab" data-page="dashboard" data-auth="required">Dashboard</button>
+            <button class="nav-tab" data-page="faq">FAQ</button>
+            <button class="nav-tab" data-page="contact">Contact</button>
+        </div>
+        <div class="nav-actions">
+            <div class="profile-icon-wrap">
+                <button class="profile-icon-btn" id="profileIconBtn">
+                    <i class="fas fa-user-circle" id="profileIconDefault"></i>
+                    <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <button class="profile-dropdown-item" id="ddSignIn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                    <button class="profile-dropdown-item" id="ddProfile" style="display:none"><i class="fas fa-user"></i> Profile</button>
+                    <button class="profile-dropdown-item" id="ddSettings" style="display:none"><i class="fas fa-cog"></i> Settings</button>
+                    <div class="profile-dropdown-divider" id="ddDivider" style="display:none"></div>
+                    <button class="profile-dropdown-item danger" id="ddLogout" style="display:none"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</button>
+        </div>
+    </div>
+</nav>
+
+<!-- ============ PAGE: HOME ============ -->
+<div class="page active" data-page="home">
+    <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="container hero-inner">
+            <span class="hero-badge pulse-badge">
+                <span class="live-dot"></span> Live & Monitoring
+            </span>
+            <h1>Sweepstakes <span class="accent-text">Monitor</span></h1>
+            <p class="hero-subtitle">Elite mod & staff alert system — real-time signals, zero noise</p>
+            <p class="hero-desc">Get instant Discord alerts the moment sweepstakes are posted. Track free SC, free spins, and exclusive offers from 80+ casinos.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-val">80+</span>
+                    <span class="hero-stat-lbl">Casinos Monitored</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-val">3</span>
+                    <span class="hero-stat-lbl">Tiers (S/A/B)</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-val">&lt;15s</span>
+                    <span class="hero-stat-lbl">Alert Speed</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <button class="btn btn-primary btn-lg" id="heroCta">View Plans</button>
+                <button class="btn btn-outline btn-lg" id="learnMoreBtn">See Features</button>
+            </div>
+            <div class="hero-tiers">
+                <span class="tier-badge tier-s">S Tier</span>
+                <span class="tier-badge tier-a">A Tier</span>
+                <span class="tier-badge tier-b">B Tier</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: PLANS ============ -->
+<div class="page" data-page="plans">
+    <section class="section" id="plans">
+        <div class="container">
+            <div class="section-header">
+                <h2>One Plan. Lifetime Access.</h2>
+                <p>No subscriptions. No hidden fees. Just pure value.</p>
+            </div>
+            <div class="plans-grid">
+                <div class="plan-card featured">
+                    <div class="plan-badge">Currently Full</div>
+                    <div class="plan-name">Elite Access</div>
+                    <div class="plan-price">Waitlist</div>
+                    <div class="plan-price-sub">all spots currently filled — join the waitlist</div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> Real-time Reddit monitoring</li>
+                        <li><i class="fas fa-check"></i> Instant Discord alerts</li>
+                        <li><i class="fas fa-check"></i> 80+ casinos across 3 tiers</li>
+                        <li><i class="fas fa-check"></i> Free SC & free spins tracking</li>
+                        <li><i class="fas fa-check"></i> Daily bonus auto-claim bot</li>
+                        <li><i class="fas fa-check"></i> Live monitoring dashboard</li>
+                        <li><i class="fas fa-check"></i> Kick.com stream alerts</li>
+                        <li><i class="fas fa-check"></i> Priority when spots open</li>
+                        <li><i class="fas fa-check"></i> Lifetime updates & support</li>
+                    </ul>
+                    <button class="btn btn-primary btn-lg" id="waitlistBtn">
+                        <i class="fas fa-bell"></i> Join the Waitlist
+                    </button>
+                    <div class="limited-badge">&#9899; 0 SPOTS REMAINING — NEXT BATCH TBA</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: FEATURES ============ -->
+<div class="page" data-page="features">
+    <section class="section section-dark" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>What You Get</h2>
+                <p>Everything you need to claim free SC automatically — no manual work.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">&#128188;</div>
+                    <h3>Auto-Claim Dashboard</h3>
+                    <p>The command center. Store your casino credentials securely in one place. The bot logs into every casino and claims free SC links, daily bonuses, and streamer drops automatically — no manual clicking required.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128279;</div>
+                    <h3>Free SC Link Auto-Claim</h3>
+                    <p>The moment a free SC link drops on Reddit or from a partnered streamer, our bot detects it and claims it for you using your stored credentials. You don't even need to be at your computer.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128197;</div>
+                    <h3>Daily Bonus Automation</h3>
+                    <p>Automatically claims daily SC bonuses across all 80+ casinos on a 24-hour schedule. Set it once and watch the daily SC stack up without logging into a single casino.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128250;</div>
+                    <h3>Streamer Drop Capture</h3>
+                    <p>Casino-partnered streamers drop exclusive free SC codes during their streams. Our bot monitors these streams and auto-claims the codes the instant they appear — zero viewer FOMO.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#9889;</div>
+                    <h3>Instant Pipeline</h3>
+                    <p>0.1-second detection to auto-claim. No delay, no notifications to click — the bot monitors Reddit, streamers, and casino sites simultaneously and claims everything in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#127970;</div>
+                    <h3>80+ Casino Support</h3>
+                    <p>Works with all major social casinos across S, A, and B tiers. Add credentials for any supported casino and the bot handles claiming across your entire portfolio from one dashboard.</p>
+                </div>
+            </div>
+            <div class="comparison-section">
+                <h3 class="comparison-title">Why Members Win More</h3>
+                <div class="comparison-grid">
+                    <div class="comparison-row">
+                        <div class="comp-label"><strong>&#9201; Speed to Market</strong></div>
+                        <div class="comp-val">Alert in <strong>0.1s</strong> with us vs competitors' <strong>15+ seconds</strong></div>
+                    </div>
+                    <div class="comparison-row">
+                        <div class="comp-label"><strong>&#127919; Accuracy Rate</strong></div>
+                        <div class="comp-val"><strong>99.2%</strong> genuine opportunities &bull; 0.8% filtered noise</div>
+                    </div>
+                    <div class="comparison-row">
+                        <div class="comp-label"><strong>&#128200; Avg Member Earnings</strong></div>
+                        <div class="comp-val"><strong>$487/month</strong> in bonus value from alerts</div>
+                    </div>
+                    <div class="comparison-row muted">
+                        <div class="comp-label">&#10060; Manual monitoring</div>
+                        <div class="comp-val">Miss <strong>73%</strong> of top opportunities</div>
+                    </div>
+                    <div class="comparison-row muted">
+                        <div class="comp-label">&#10060; Free alerts</div>
+                        <div class="comp-val"><strong>6-8 minute</strong> delay (too late)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: TESTIMONIALS ============ -->
+<div class="page" data-page="testimonials">
+    <section class="section section-dark" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>What Our Members Say</h2>
+                <p>Join hundreds of verified members already winning.</p>
+            </div>
+            <div class="testimonials-carousel" id="testimonialsCarousel">
+                <div class="carousel-track" id="carouselTrack">
+                    <!-- Injected by JS -->
+                </div>
+                <button class="carousel-btn carousel-prev" id="carouselPrev"><i class="fas fa-chevron-left"></i></button>
+                <button class="carousel-btn carousel-next" id="carouselNext"><i class="fas fa-chevron-right"></i></button>
+                <div class="carousel-dots" id="carouselDots"></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: PROS ============ -->
+<div class="page" data-page="pros">
+    <section class="pros-section" id="pros">
+        <div class="container">
+            <div class="section-header">
+                <h2>The Pros Use <span class="accent-text">Our Monitor</span></h2>
+                <p>See how top earners get the upper hand with real-time alerts.</p>
+            </div>
+            <div class="pros-slider">
+                <div class="pros-header">
+                    <div class="pros-title-line">
+                        <span class="pros-headline">top earners</span>
+                        <div class="pros-arrows">
+                            <button class="pros-arrow pros-arrow-prev" id="prosPrev"><i class="fas fa-chevron-left"></i></button>
+                            <button class="pros-arrow pros-arrow-next" id="prosNext"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pros-track-wrapper">
+                    <div class="pros-track" id="prosTrack">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+                <div class="pros-bar-track" id="prosBarTrack">
+                    <div class="pros-bar-fill" id="prosBarFill"></div>
+                </div>
+            </div>
+            <div class="pros-cta">
+                <p>Join the same program the pros use.</p>
+                <button class="btn btn-primary btn-lg" onclick="navigateTo('plans')"><i class="fas fa-rocket"></i> Get Your Upper Hand</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: DASHBOARD (Redirect) ============ -->
+<div class="page" data-page="dashboard">
+    <section class="dash-redirect" id="dashboardPage">
+        <div class="dash-redirect-card">
+            <div class="dash-redirect-icon"><i class="fas fa-tachometer-alt"></i></div>
+            <h2>Launching Dashboard</h2>
+            <p id="dashRedirectMsg">Preparing your monitor — redirecting in...</p>
+            <div class="countdown-ring">
+                <svg viewBox="0 0 100 100" class="countdown-svg">
+                    <circle class="countdown-bg" cx="50" cy="50" r="42" />
+                    <circle class="countdown-fg" id="countdownCircle" cx="50" cy="50" r="42"
+                        stroke-dasharray="263.89" stroke-dashoffset="0" />
+                </svg>
+                <span class="countdown-num" id="countdownNum">5</span>
+            </div>
+            <div id="dashGateMsg" class="dash-gate-msg" style="display:none">
+                <!-- Auth gate messages injected by JS -->
+            </div>
+            <div class="dash-redirect-actions">
+                <button class="btn btn-outline" id="cancelRedirect"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: FAQ ============ -->
+<div class="page" data-page="faq">
+    <section class="section section-dark" id="faq">
+        <div class="container">
+            <div class="section-header">
+                <h2>Frequently Asked Questions</h2>
+            </div>
+            <div class="faq-list" id="faqList">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: CONTACT ============ -->
+<div class="page" data-page="contact">
+    <section class="section" id="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Get In Touch</h2>
+                <p>Questions? Issues? We're here to help.</p>
+            </div>
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    <div class="contact-info-item">
+                        <i class="fab fa-discord"></i>
+                        <span>Join our <a href="https://discord.gg/pDSFmgBFTf" id="discordLink" target="_blank">Discord server</a> for fastest support</span>
+                    </div>
+                    <div class="contact-info-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>support@claimscasino.com</span>
+                    </div>
+                    <div class="contact-info-item">
+                        <i class="fab fa-twitter"></i>
+                        <span>@casinoclaimsofficial</span>
+                    </div>
+                    <div class="contact-info-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Typical response: &lt; 1 hour</span>
+                    </div>
+                    <p class="contact-info-note">Already a member? Use the <button class="link-btn" data-page="dashboard">Dashboard</button> tab for live monitoring.</p>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <label for="contactName">Your Name</label>
+                        <input type="text" id="contactName" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactEmail">Email Address</label>
+                        <input type="email" id="contactEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactSubject">Subject</label>
+                        <select id="contactSubject">
+                            <option value="">Select a topic...</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="support">Technical Support</option>
+                            <option value="billing">Billing / Purchase</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactMessage">Message</label>
+                        <textarea id="contactMessage" rows="5" placeholder="Write your message..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" id="contactSubmit">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                    <div class="contact-status" id="contactStatus"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ PAGE: PROFILE ============ -->
+<div class="page" data-page="profile">
+    <section class="profile-page" id="profilePage">
+        <div class="container">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    <span id="profileAvatarLetter">1</span>
+                </div>
+                <h2 id="profileName">Customer #124</h2>
+                <p class="profile-role" id="profileRole">Elite Member</p>
+                <p class="profile-member-since" id="profileMemberSince">
+                    <i class="fas fa-calendar-alt"></i> Member since <span id="profileJoinDate">Loading...</span>
+                </p>
+            </div>
+
+            <div class="profile-grid">
+                <div class="profile-card">
+                    <h3><i class="fas fa-user"></i> Bio</h3>
+                    <div class="profile-bio" id="profileBioDisplay">
+                        <p id="profileBioText">No bio yet. Tell the community about yourself.</p>
+                        <button class="btn btn-outline btn-sm" id="profileEditBioBtn"><i class="fas fa-edit"></i> Edit Bio</button>
+                    </div>
+                    <div class="profile-bio-edit" id="profileBioEdit" style="display:none">
+                        <textarea id="profileBioInput" rows="4" placeholder="Write something about yourself..." maxlength="300"></textarea>
+                        <div class="profile-bio-actions">
+                            <button class="btn btn-primary btn-sm" id="profileSaveBioBtn"><i class="fas fa-check"></i> Save</button>
+                            <button class="btn btn-outline btn-sm" id="profileCancelBioBtn"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                        <span class="profile-bio-counter" id="profileBioCounter">0/300</span>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <h3><i class="fas fa-chart-bar"></i> Stats</h3>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <span class="profile-stat-icon"><i class="fas fa-crown"></i></span>
+                            <div>
+                                <span class="profile-stat-val">Elite</span>
+                                <span class="profile-stat-lbl">Membership Tier</span>
+                            </div>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="profile-stat-icon green"><i class="fas fa-check-circle"></i></span>
+                            <div>
+                                <span class="profile-stat-val" id="profileStatus">Active</span>
+                                <span class="profile-stat-lbl">Account Status</span>
+                            </div>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="profile-stat-icon purple"><i class="fas fa-bell"></i></span>
+                            <div>
+                                <span class="profile-stat-val" id="profileAlerts">—</span>
+                                <span class="profile-stat-lbl">Alerts Caught</span>
+                            </div>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="profile-stat-icon gold"><i class="fas fa-coins"></i></span>
+                            <div>
+                                <span class="profile-stat-val" id="profileScTotal">—</span>
+                                <span class="profile-stat-lbl">Total SC Claimed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <h3><i class="fas fa-cog"></i> Settings</h3>
+                    <div class="profile-settings">
+                        <div class="profile-setting">
+                            <label for="profileDiscord">Discord Username</label>
+                            <input type="text" id="profileDiscord" placeholder="e.g. user#0000" maxlength="40">
+                            <button class="btn btn-primary btn-sm" id="profileSaveDiscord" style="margin-top:8px;"><i class="fas fa-save"></i> Save</button>
+                        </div>
+                        <div class="profile-setting">
+                            <label>Theme</label>
+                            <div class="profile-theme-toggle">
+                                <button class="btn btn-outline btn-sm active" id="profileThemeDark"><i class="fas fa-moon"></i> Dark</button>
+                                <button class="btn btn-outline btn-sm" id="profileThemeLight"><i class="fas fa-sun"></i> Light</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <h3><i class="fas fa-info-circle"></i> Account Info</h3>
+                    <div class="profile-info-list">
+                        <div class="profile-info-item">
+                            <span>License ID</span>
+                            <strong>#124</strong>
+                        </div>
+                        <div class="profile-info-item">
+                            <span>Email</span>
+                            <strong id="profileEmail">—</strong>
+                        </div>
+                        <div class="profile-info-item">
+                            <span>Join Date</span>
+                            <strong id="profileJoinDate2">—</strong>
+                        </div>
+                        <div class="profile-info-item">
+                            <span>Last Login</span>
+                            <strong id="profileLastLogin">—</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container footer-inner">
+        <p>&copy; 2025 Sweepstakes Monitor. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#" data-page="faq">Privacy</a>
+            <a href="#" data-page="faq">Terms</a>
+            <a href="#" data-page="contact">Support</a>
+        </div>
+    </div>
+</footer>
+
+<!-- Waitlist Modal -->
+<div class="modal-overlay" id="waitlistModal">
+    <div class="modal">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-header">
+            <h2>Join the Waitlist</h2>
+            <p>All spots are currently filled. Get notified when a new batch opens.</p>
+        </div>
+
+        <div class="modal-step" id="waitlistStepForm" style="display:block">
+            <div class="waitlist-icon"><i class="fas fa-bell"></i></div>
+            <p class="waitlist-desc">We release new spots in batches. Leave your email and Discord username and we'll ping you the moment a slot opens up.</p>
+            <div class="form-group">
+                <label for="waitlistEmail">Email Address</label>
+                <input type="email" id="waitlistEmail" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="waitlistDiscord">Discord Username <span class="form-hint">(optional)</span></label>
+                <input type="text" id="waitlistDiscord" placeholder="e.g. user#0000">
+            </div>
+            <button class="btn btn-primary btn-lg" id="waitlistSubmit">
+                <i class="fas fa-paper-plane"></i> Notify Me
+            </button>
+        </div>
+
+        <div class="modal-step" id="waitlistStepSuccess" style="display:none">
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+            <h2>You're on the List!</h2>
+            <p>We'll email you as soon as new spots open up. First come, first served.</p>
+            <div class="waitlist-position">
+                <span class="waitlist-pos-label">Your position</span>
+                <span class="waitlist-pos-num" id="waitlistPosition">#42</span>
+            </div>
+            <button class="btn btn-primary btn-lg" id="waitlistDoneBtn">
+                <i class="fas fa-arrow-left"></i> Back to Site
+            </button>
+        </div>
+
+        <div class="modal-loading" id="waitlistLoading" style="display:none">
+            <div class="spinner"></div>
+            <p id="waitlistLoadingText">Adding you to the list...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal">
+        <button class="modal-close" id="loginModalClose">&times;</button>
+        <div class="modal-header">
+            <h2>Sign In</h2>
+            <p>Enter your license ID to access the dashboard.</p>
+        </div>
+        <div class="modal-step" style="display:block">
+            <div class="login-icon"><i class="fas fa-key"></i></div>
+            <div class="form-group">
+                <label for="loginId">License ID</label>
+                <input type="text" id="loginId" placeholder="Enter your license key" maxlength="10" autocomplete="off">
+            </div>
+            <div class="login-error" id="loginError">Invalid license ID. Please try again.</div>
+            <button class="btn btn-primary btn-lg" id="loginSubmit">
+                <i class="fas fa-arrow-right"></i> Sign In
+            </button>
+            <p class="login-help">Don't have a license? <a href="#" data-page="plans" id="loginPlansLink">Join the waitlist</a> to get one.</p>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
