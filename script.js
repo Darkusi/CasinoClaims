@@ -89,8 +89,7 @@ function renderTestimonials() {
         <div class="testimonial-card" style="animation-delay:${i * 0.1}s">
             <div class="testimonial-card-glow"></div>
             <div class="testimonial-stars">
-                <span class="star-bg">★★★★★</span>
-                <span class="star-fg">★★★★★</span>
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
             </div>
             <div class="testimonial-quote">"${t.quote}"</div>
             <div class="testimonial-footer">
@@ -325,6 +324,7 @@ function updateNavAuth() {
     if (isLoggedIn()) {
         iconDefault.style.display = 'none';
         iconInitial.style.display = 'flex';
+        iconInitial.textContent = localStorage.getItem(CUSTOMER_LS_KEY)?.charAt(0) || '?';
         ddSignIn.style.display = 'none';
         ddProfile.style.display = 'flex';
         ddSettings.style.display = 'flex';

@@ -151,6 +151,123 @@ body {
     gap: 8px;
 }
 
+/* ── Profile Icon & Dropdown ── */
+.profile-icon-wrap {
+    position: relative;
+}
+
+.profile-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    padding: 0;
+    overflow: hidden;
+}
+
+.profile-icon-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 18px rgba(168,85,247,0.2);
+    background: rgba(168,85,247,0.08);
+}
+
+.profile-icon-btn i { font-size: 1.15rem; }
+
+.profile-icon-initial {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--primary);
+    line-height: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(217,70,239,0.1));
+    border-radius: 50%;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: -8px;
+    min-width: 200px;
+    background: rgba(18,18,22,0.96);
+    border: 1px solid rgba(168,85,247,0.15);
+    border-radius: 12px;
+    padding: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px) scale(0.96);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 300;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(168,85,247,0.06);
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.profile-dropdown-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.75);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    font-weight: 500;
+}
+
+.profile-dropdown-item i {
+    width: 18px;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85rem;
+    transition: color 0.15s;
+}
+
+.profile-dropdown-item:hover {
+    background: rgba(168,85,247,0.1);
+    color: #fff;
+}
+
+.profile-dropdown-item:hover i {
+    color: var(--primary);
+}
+
+.profile-dropdown-item.danger:hover {
+    background: rgba(239,68,68,0.1);
+    color: var(--red);
+}
+
+.profile-dropdown-item.danger:hover i {
+    color: var(--red);
+}
+
+.profile-dropdown-divider {
+    height: 1px;
+    background: rgba(168,85,247,0.1);
+    margin: 4px 8px;
+}
+
 .user-menu {
     display: none;
     align-items: center;
@@ -208,7 +325,7 @@ body {
 
 /* ── Page System ── */
 .page { display: none; animation: pageFadeIn 0.35s ease; }
-.page.active { display: block; }
+.page.active { display: block; min-height: calc(100vh - 64px); }
 
 @keyframes pageFadeIn {
     from { opacity: 0; transform: translateY(12px); }
@@ -547,36 +664,17 @@ body {
     pointer-events: none;
 }
 
-/* Animated star rating */
 .testimonial-stars {
-    position: relative;
-    display: inline-block;
-    font-size: 1.3rem;
-    letter-spacing: 4px;
+    display: flex;
+    justify-content: center;
+    gap: 3px;
     margin-bottom: 18px;
-    color: #333;
-    unicode-bidi: bidi-override;
-    direction: rtl;
 }
 
-.star-bg, .star-fg {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    letter-spacing: 4px;
-}
-
-.star-bg { color: #333; }
-.star-fg {
+.testimonial-stars i {
     color: #f59e0b;
-    width: 100%;
-    overflow: hidden;
-    text-shadow: 0 0 8px rgba(245,158,11,0.3);
-}
-
-.testimonial-stars .star-fill {
-    display: none;
+    font-size: 1rem;
+    filter: drop-shadow(0 0 4px rgba(245,158,11,0.3));
 }
 
 .testimonial-quote {
@@ -954,7 +1052,7 @@ body {
 
 /* ── Dashboard Redirect ── */
 .dash-redirect {
-    min-height: calc(100vh - 64px);
+    min-height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1255,7 +1353,7 @@ body {
 .dash-embed-container {
     position: relative;
     width: 100%;
-    min-height: calc(100vh - var(--nav-h, 64px));
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg);
@@ -1320,7 +1418,7 @@ body {
 /* ── Profile Page ── */
 .profile-page {
     padding: 100px 0 60px;
-    min-height: calc(100vh - 64px);
+    min-height: 100%;
 }
 
 .profile-header {
