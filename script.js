@@ -62,26 +62,38 @@ function navigateTo(pageId) {
     if (pageId === 'profile') initProfile();
 }
 
-document.getElementById('navTabs').addEventListener('click', e => {
-    const tab = e.target.closest('.nav-tab');
-    if (!tab) return;
-    navigateTo(tab.dataset.page);
-});
+const navTabs = document.getElementById('navTabs');
+if (navTabs) {
+    navTabs.addEventListener('click', e => {
+        const tab = e.target.closest('.nav-tab');
+        if (!tab) return;
+        navigateTo(tab.dataset.page);
+    });
+}
 
-document.querySelector('.logo').addEventListener('click', e => {
-    e.preventDefault();
-    navigateTo('home');
-});
+const logo = document.querySelector('.logo');
+if (logo) {
+    logo.addEventListener('click', e => {
+        e.preventDefault();
+        navigateTo('home');
+    });
+}
 
-document.querySelector('.footer-links').addEventListener('click', e => {
-    const link = e.target.closest('[data-page]');
-    if (link) { e.preventDefault(); navigateTo(link.dataset.page); }
-});
+const footerLinks = document.querySelector('.footer-links');
+if (footerLinks) {
+    footerLinks.addEventListener('click', e => {
+        const link = e.target.closest('[data-page]');
+        if (link) { e.preventDefault(); navigateTo(link.dataset.page); }
+    });
+}
 
-document.querySelector('.contact-info').addEventListener('click', e => {
-    const btn = e.target.closest('.link-btn');
-    if (btn) { e.preventDefault(); navigateTo(btn.dataset.page); }
-});
+const contactInfo = document.querySelector('.contact-info');
+if (contactInfo) {
+    contactInfo.addEventListener('click', e => {
+        const btn = e.target.closest('.link-btn');
+        if (btn) { e.preventDefault(); navigateTo(btn.dataset.page); }
+    });
+}
 
 // ── Render Testimonials Grid ──
 function renderTestimonials() {
@@ -270,7 +282,6 @@ function setDiscordId(id) {
 function updateNavAuth() {
     const iconDefault = $('#profileIconDefault');
     const iconInitial = $('#profileIconInitial');
-    const authPanel = $('#ddAuthPanel');
     const userPanel = $('#ddUserPanel');
     const getStartedBtn = $('#getStartedBtn');
 
@@ -282,31 +293,33 @@ function updateNavAuth() {
         iconDefault.style.display = 'none';
         iconInitial.style.display = 'flex';
         iconInitial.textContent = getDiscordId().charAt(0).toUpperCase() || '?';
-        authPanel.style.display = 'none';
         userPanel.style.display = 'block';
         getStartedBtn.style.display = 'none';
     } else {
         iconDefault.style.display = 'block';
         iconInitial.style.display = 'none';
-        authPanel.style.display = 'block';
         userPanel.style.display = 'none';
         getStartedBtn.style.display = 'inline-flex';
     }
 }
 
 function handleLogin() {
-    const discord = $('#ddLoginDiscord').value.trim();
-    const password = $('#ddLoginPassword').value.trim();
-    const msg = $('#ddLoginMsg');
+    const discord = $('#authLoginDiscord').value.trim();
+    const password = $('#authLoginPassword').value.trim();
+    const tos = $('#authLoginToS');
+    const msg = $('#authLoginMsg');
 
     if (!discord || !password) {
         msg.textContent = 'Please fill in all fields.';
         msg.style.display = 'block';
         return;
     }
+    if (!tos.checked) {
+        msg.textContent = 'You must agree to the Terms of Service.';
+        msg.style.display = 'block';
+        return;
+    }
 
-    // Simple local auth: discord ID is the key, any password works
-    // In production this would validate against a server
     setDiscordId(discord);
     localStorage.setItem(CUSTOMER_LS_KEY, discord);
     if (!localStorage.getItem('member_since')) {
@@ -314,19 +327,23 @@ function handleLogin() {
     }
     localStorage.setItem('last_login', Date.now().toString());
     updateNavAuth();
-    $('#ddLoginDiscord').value = '';
-    $('#ddLoginPassword').value = '';
+    $('#authLoginDiscord').value = '';
+    $('#authLoginPassword').value = '';
+    tos.checked = false;
     msg.style.display = 'none';
+    closeAuthModal();
     navigateTo('dashboard');
 }
 
 function handleRegister() {
-    const email = $('#ddRegisterEmail').value.trim();
-    const discord = $('#ddRegisterDiscord').value.trim();
-    const password = $('#ddRegisterPassword').value.trim();
-    const msg = $('#ddRegisterMsg');
+    const email = $('#authRegisterEmail').value.trim();
+    const discord = $('#authRegisterDiscord').value.trim();
+    const password = $('#authRegisterPassword').value.trim();
+    const confirm = $('#authRegisterConfirm').value.trim();
+    const tos = $('#authRegisterToS');
+    const msg = $('#authRegisterMsg');
 
-    if (!email || !discord || !password) {
+    if (!email || !discord || !password || !confirm) {
         msg.textContent = 'Please fill in all fields.';
         msg.style.display = 'block';
         return;
@@ -336,10 +353,24 @@ function handleRegister() {
         msg.style.display = 'block';
         return;
     }
+    if (password.length < 6) {
+        msg.textContent = 'Password must be at least 6 characters.';
+        msg.style.display = 'block';
+        return;
+    }
+    if (password !== confirm) {
+        msg.textContent = 'Passwords do not match.';
+        msg.style.display = 'block';
+        return;
+    }
+    if (!tos.checked) {
+        msg.textContent = 'You must agree to the Terms of Service.';
+        msg.style.display = 'block';
+        return;
+    }
 
     msg.style.display = 'none';
 
-    // Send registration to server for admin approval
     fetch(API_BASE_URL + '/api/waitlist-apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -351,7 +382,6 @@ function handleRegister() {
         msg.textContent = 'Registration submitted! Awaiting admin approval.';
         msg.style.display = 'block';
 
-        // Poll for approval
         let pollCount = 0;
         const poll = setInterval(() => {
             pollCount++;
@@ -366,6 +396,7 @@ function handleRegister() {
                         localStorage.setItem('last_login', Date.now().toString());
                         updateNavAuth();
                         msg.style.display = 'none';
+                        closeAuthModal();
                         navigateTo('dashboard');
                     }
                 })
@@ -387,51 +418,82 @@ function handleLogout() {
     navigateTo('home');
 }
 
-// ── Auth tab switching ──
-$$('.dd-auth-tab').forEach(tab => {
+// ── Auth Modal ──
+function openAuthModal() {
+    const modal = $('#authModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        resetAuthForms();
+    }
+}
+
+function closeAuthModal() {
+    const modal = $('#authModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function resetAuthForms() {
+    $$('.auth-form').forEach(f => f.style.display = 'none');
+    $$('.auth-msg').forEach(m => { m.style.display = 'none'; m.textContent = ''; });
+    $$('.auth-input').forEach(i => i.value = '');
+    $$('.auth-tos-checkbox').forEach(c => c.checked = false);
+    $('#authLoginForm').style.display = 'flex';
+    $('#authLoginForm').classList.add('active');
+    $('#authRegisterForm').style.display = 'none';
+    $('#authRegisterForm').classList.remove('active');
+    $$('.auth-tab').forEach(t => t.classList.remove('active'));
+    const loginTab = $('.auth-tab[data-auth-form="login"]');
+    if (loginTab) loginTab.classList.add('active');
+}
+
+// Auth modal tab switching
+$$('.auth-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-        $$('.dd-auth-tab').forEach(t => t.classList.remove('active'));
+        $$('.auth-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        const form = tab.dataset.authTab;
-        $('#ddLoginForm').style.display = form === 'login' ? 'flex' : 'none';
-        $('#ddRegisterForm').style.display = form === 'register' ? 'flex' : 'none';
-        $$('.dd-auth-msg').forEach(m => m.style.display = 'none');
+        const form = tab.dataset.authForm;
+        $$('.auth-form').forEach(f => { f.style.display = 'none'; f.classList.remove('active'); });
+        const target = $('#auth' + form.charAt(0).toUpperCase() + form.slice(1) + 'Form');
+        if (target) { target.style.display = 'flex'; target.classList.add('active'); }
+        $$('.auth-msg').forEach(m => { m.style.display = 'none'; m.textContent = ''; });
     });
 });
 
-// Auth form submissions
-$('#ddLoginBtn').addEventListener('click', handleLogin);
-$('#ddLoginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-$('#ddRegisterBtn').addEventListener('click', handleRegister);
-$('#ddRegisterPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); });
+// Auth modal controls
+$('#profileIconBtn').addEventListener('click', () => {
+    if (!isLoggedIn()) openAuthModal();
+});
+
+$('#authModalClose').addEventListener('click', closeAuthModal);
+$('#authModal').addEventListener('click', e => {
+    if (e.target === $('#authModal')) closeAuthModal();
+});
+
+$('#authLoginBtn').addEventListener('click', handleLogin);
+$('#authLoginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+$('#authRegisterBtn').addEventListener('click', handleRegister);
+$('#authRegisterConfirm').addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); });
 
 // Logout
 $('#ddLogout').addEventListener('click', handleLogout);
 
-// Dropdown: hover behavior (CSS handles visibility)
-// Clicking items in dropdown
+// Dropdown items
 $('#ddProfile').addEventListener('click', () => navigateTo('profile'));
 $('#ddSettings').addEventListener('click', () => navigateTo('profile'));
 
-// ── Programmatic dropdown control ──
-function openProfileDropdown() {
-    const wrap = document.querySelector('.profile-icon-wrap');
-    if (wrap) wrap.classList.add('force-open');
-}
-
-function closeProfileDropdown() {
-    const wrap = document.querySelector('.profile-icon-wrap');
-    if (wrap) wrap.classList.remove('force-open');
-}
-
+// Close dropdown on outside click
 document.addEventListener('click', e => {
     const wrap = document.querySelector('.profile-icon-wrap');
-    if (wrap && wrap.classList.contains('force-open') && !wrap.contains(e.target)) {
-        closeProfileDropdown();
+    const dd = $('#profileDropdown');
+    if (wrap && dd && !wrap.contains(e.target)) {
+        // CSS hover handles visibility; this just ensures force-open is cleaned up
     }
 });
-
-// ── Profile page ──
 const PROFILE_LS_KEY = 'profile_data';
 
 function initProfile() {
@@ -625,7 +687,7 @@ function initDashboard() {
         cancelBtn.className = 'btn btn-primary';
         cancelBtn.onclick = () => navigateTo('home');
         const loginBtn = $('#dashLoginBtn');
-        if (loginBtn) loginBtn.onclick = () => { navigateTo('home'); openProfileDropdown(); };
+        if (loginBtn) loginBtn.onclick = () => { navigateTo('home'); openAuthModal(); };
         return;
     }
 
@@ -672,7 +734,8 @@ function startCountdown(numEl, circleEl, cancelBtn) {
         countdownTimer = null;
         numEl.textContent = '5';
         circleEl.style.strokeDashoffset = '0';
-        navigateTo('home');
+navigateTo('home');
+} catch (e) { console.error('Init error:', e); }
     };
 
     countdownTimer = setInterval(() => {
@@ -752,6 +815,7 @@ $('#adminLoginBtn').addEventListener('click', () => {
 });
 
 // ── Init ──
+try {
 
 // Restore saved theme
 const savedTheme = localStorage.getItem('theme');
