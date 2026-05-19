@@ -5204,6 +5204,91 @@ def serve_claims_casino(filename="index.html"):
     return send_from_directory(str(CLAIMS_CASINO_DIR), filename)
 
 # ── Embed dashboard (no auth) for inline display ──
+APPLICANTS_FILE = SCRIPT_DIR / "applicants.json"
+
+def load_applicants():
+    if not APPLICANTS_FILE.exists():
+        return []
+    with open(APPLICANTS_FILE) as f:
+        return json.load(f)
+
+def save_applicants(data):
+    with open(APPLICANTS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+@app.route("/api/waitlist-apply", methods=["POST"])
+def api_waitlist_apply():
+    data = request.get_json(silent=True) or {}
+    email = data.get("email", "").strip()
+    discord = data.get("discord", "").strip()
+    password = data.get("password", "")
+    typ = data.get("type", "waitlist")
+
+    if not email:
+        return jsonify({"ok": False, "error": "Email required"}), 400
+
+    applicants = load_applicants()
+    # Check if already applied
+    existing = [a for a in applicants if a.get("email") == email]
+    position = len(applicants) + 1
+
+    applicants.append({
+        "email": email,
+        "discord": discord,
+        "password": password if password else "",
+        "status": "pending",
+        "type": typ,
+        "position": position,
+        "timestamp": time.time()
+    })
+    save_applicants(applicants)
+
+    return jsonify({"ok": True, "position": position})
+
+@app.route("/api/check-approval")
+def api_check_approval():
+    email = request.args.get("email", "")
+    discord = request.args.get("discord", "")
+    license_id = request.args.get("license_id", "")
+
+    applicants = load_applicants()
+    approved_users = load_approved_users()
+
+    # Check by email or discord
+    for a in applicants:
+        match = (email and a.get("email") == email) or (discord and a.get("discord") == discord)
+        if match and a.get("status") == "approved":
+            lid = a.get("license_id", license_id or discord[:8])
+            return jsonify({"approved": True, "license_id": lid})
+
+    # Also check approved users list
+    if discord and discord in approved_users.get("discord_ids", []):
+        return jsonify({"approved": True, "license_id": discord[:8]})
+
+    return jsonify({"approved": False, "license_id": None})
+
+@app.route("/api/admin-applicants")
+def api_admin_applicants():
+    applicants = load_applicants()
+    return jsonify(applicants)
+
+@app.route("/api/admin-applicant-action", methods=["POST"])
+def api_admin_applicant_action():
+    data = request.get_json(silent=True) or {}
+    email = data.get("email", "")
+    action = data.get("action", "")  # approve, deny, interview, save
+
+    applicants = load_applicants()
+    for a in applicants:
+        if a.get("email") == email:
+            a["status"] = action
+            if action == "approved":
+                a["license_id"] = data.get("license_id", f"LIC-{len(applicants)}")
+            break
+
+    save_applicants(applicants)
+    return jsonify({"ok": True})
+
 @app.route("/api/embed-dashboard")
 def embed_dashboard():
     html = MAIN_DASHBOARD_HTML

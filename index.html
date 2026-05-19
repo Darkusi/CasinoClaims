@@ -23,7 +23,6 @@
             <button class="nav-tab" data-page="features">Features</button>
             <button class="nav-tab" data-page="testimonials">Testimonials</button>
             <button class="nav-tab" data-page="pros">Pros</button>
-            <button class="nav-tab" data-page="profile">Profile</button>
             <button class="nav-tab" data-page="dashboard" data-auth="required">Dashboard</button>
             <button class="nav-tab" data-page="faq">FAQ</button>
             <button class="nav-tab" data-page="contact">Contact</button>
@@ -35,28 +34,39 @@
                     <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
                 </button>
                 <div class="profile-dropdown" id="profileDropdown">
-                    <button class="profile-dropdown-item" id="ddSignIn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-                    <button class="profile-dropdown-item" id="ddProfile" style="display:none"><i class="fas fa-user"></i> Profile</button>
-                    <button class="profile-dropdown-item" id="ddSettings" style="display:none"><i class="fas fa-cog"></i> Settings</button>
-                    <div class="profile-dropdown-divider" id="ddDivider" style="display:none"></div>
-                    <button class="profile-dropdown-item danger" id="ddLogout" style="display:none"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                </div>
-                </div>
-
-                <div class="profile-card">
-                    <h3><i class="fas fa-shield-alt"></i> Admin</h3>
-                    <div class="admin-login">
-                        <p class="admin-desc">Staff access to the management panel.</p>
-                        <input type="text" id="adminUsername" placeholder="Username" class="admin-input">
-                        <input type="password" id="adminPassword" placeholder="Password" class="admin-input">
-                        <button class="btn btn-primary btn-sm" id="adminLoginBtn">
-                            <i class="fas fa-lock"></i> Login
-                        </button>
-                        <div class="admin-error" id="adminError"></div>
+                    <!-- Auth panel (logged out) -->
+                    <div class="dd-auth-panel" id="ddAuthPanel">
+                        <div class="dd-auth-tabs">
+                            <button class="dd-auth-tab active" data-auth-tab="login">Sign In</button>
+                            <button class="dd-auth-tab" data-auth-tab="register">Register</button>
+                        </div>
+                        <!-- Login form -->
+                        <div class="dd-auth-form" id="ddLoginForm">
+                            <input type="text" id="ddLoginDiscord" placeholder="Discord ID" class="dd-input" autocomplete="off">
+                            <input type="password" id="ddLoginPassword" placeholder="Password" class="dd-input">
+                            <div class="dd-auth-msg" id="ddLoginMsg"></div>
+                            <button class="dd-auth-btn" id="ddLoginBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                        </div>
+                        <!-- Register form -->
+                        <div class="dd-auth-form" id="ddRegisterForm" style="display:none">
+                            <input type="email" id="ddRegisterEmail" placeholder="Email Address" class="dd-input" autocomplete="off">
+                            <input type="text" id="ddRegisterDiscord" placeholder="Discord ID" class="dd-input" autocomplete="off">
+                            <input type="password" id="ddRegisterPassword" placeholder="Password" class="dd-input">
+                            <div class="dd-auth-msg" id="ddRegisterMsg"></div>
+                            <button class="dd-auth-btn" id="ddRegisterBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+                        </div>
+                    </div>
+                    <!-- Logged in items -->
+                    <div class="dd-user-panel" id="ddUserPanel" style="display:none">
+                        <button class="profile-dropdown-item" id="ddProfile"><i class="fas fa-user"></i> Profile</button>
+                        <button class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</button>
+                        <div class="profile-dropdown-divider"></div>
+                        <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
                 </div>
             </div>
-    </div>
+            <button class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</button>
+        </div>
 </nav>
 
 <!-- ============ PAGE: HOME ============ -->
@@ -109,6 +119,7 @@
                 <div class="plan-card featured">
                     <div class="plan-badge">Currently Full</div>
                     <div class="plan-name">Elite Access</div>
+                    <div class="plan-price-original"><s>$299.00</s></div>
                     <div class="plan-price">Waitlist</div>
                     <div class="plan-price-sub">all spots currently filled — join the waitlist</div>
                     <ul class="plan-features">
@@ -312,7 +323,7 @@
                     </div>
                     <div class="contact-info-item">
                         <i class="fas fa-envelope"></i>
-                        <span>support@claimscasino.com</span>
+                        <span>glowrius@proton.me</span>
                     </div>
                     <div class="contact-info-item">
                         <i class="fab fa-twitter"></i>
@@ -446,8 +457,8 @@
                     <h3><i class="fas fa-info-circle"></i> Account Info</h3>
                     <div class="profile-info-list">
                         <div class="profile-info-item">
-                            <span>License ID</span>
-                            <strong>#124</strong>
+                            <span>Discord ID</span>
+                            <strong id="profileLicenseId">—</strong>
                         </div>
                         <div class="profile-info-item">
                             <span>Email</span>
@@ -461,6 +472,19 @@
                             <span>Last Login</span>
                             <strong id="profileLastLogin">—</strong>
                         </div>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <h3><i class="fas fa-shield-alt"></i> Admin</h3>
+                    <div class="admin-login">
+                        <p class="admin-desc">Staff access to the management panel.</p>
+                        <input type="text" id="adminUsername" placeholder="Username" class="admin-input">
+                        <input type="password" id="adminPassword" placeholder="Password" class="admin-input">
+                        <button class="btn btn-primary btn-sm" id="adminLoginBtn">
+                            <i class="fas fa-lock"></i> Login
+                        </button>
+                        <div class="admin-error" id="adminError"></div>
                     </div>
                 </div>
             </div>
@@ -525,29 +549,6 @@
     </div>
 </div>
 
-<!-- Login Modal -->
-<div class="modal-overlay" id="loginModal">
-    <div class="modal">
-        <button class="modal-close" id="loginModalClose">&times;</button>
-        <div class="modal-header">
-            <h2>Sign In</h2>
-            <p>Enter your license ID to access the dashboard.</p>
-        </div>
-        <div class="modal-step" style="display:block">
-            <div class="login-icon"><i class="fas fa-key"></i></div>
-            <div class="form-group">
-                <label for="loginId">License ID</label>
-                <input type="text" id="loginId" placeholder="Enter your license key" maxlength="10" autocomplete="off">
-            </div>
-            <div class="login-error" id="loginError">Invalid license ID. Please try again.</div>
-            <button class="btn btn-primary btn-lg" id="loginSubmit">
-                <i class="fas fa-arrow-right"></i> Sign In
-            </button>
-            <p class="login-help">Don't have a license? <a href="#" data-page="plans" id="loginPlansLink">Join the waitlist</a> to get one.</p>
-        </div>
-    </div>
-</div>
-
-<script src="script.js"></script>
+<!-- Footer -->
 </body>
 </html>

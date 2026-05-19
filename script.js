@@ -276,6 +276,7 @@ waitlistModal.addEventListener('click', e => {
 
 waitlistSubmit.addEventListener('click', () => {
     const email = waitlistEmail.value.trim();
+    const discord = waitlistDiscord.value.trim();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         waitlistEmail.classList.add('error');
         return;
@@ -284,14 +285,44 @@ waitlistSubmit.addEventListener('click', () => {
 
     waitlistStepForm.style.display = 'none';
     waitlistLoading.style.display = 'flex';
-    waitlistLoadingText.textContent = 'Adding you to the list...';
+    waitlistLoadingText.textContent = 'Submitting your application...';
 
-    setTimeout(() => {
-        const pos = Math.floor(Math.random() * 200) + 5;
-        waitlistPosition.textContent = '#' + pos;
+    fetch(API_BASE_URL + '/api/waitlist-apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, discord, type: 'waitlist' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        waitlistPosition.textContent = '#' + (data.position || Math.floor(Math.random() * 200) + 5);
         waitlistLoading.style.display = 'none';
         waitlistStepSuccess.style.display = 'block';
-    }, 1800);
+
+        // Poll for approval
+        let pollCount = 0;
+        const poll = setInterval(() => {
+            pollCount++;
+            fetch(API_BASE_URL + '/api/check-approval?email=' + encodeURIComponent(email))
+                .then(r => r.json())
+                .then(d => {
+                    if (d.approved && d.license_id) {
+                        clearInterval(poll);
+                        localStorage.setItem(CUSTOMER_LS_KEY, d.license_id);
+                        if (discord) setDiscordId(discord);
+                        localStorage.setItem('member_since', Date.now().toString());
+                        localStorage.setItem('last_login', Date.now().toString());
+                        updateNavAuth();
+                        closeModal();
+                        navigateTo('dashboard');
+                    }
+                })
+                .catch(() => {});
+            if (pollCount > 120) clearInterval(poll); // stop after 10 min
+        }, 5000);
+    })
+    .catch(() => {
+        waitlistLoadingText.textContent = 'Server error. Try again later.';
+    });
 });
 
 waitlistDoneBtn.addEventListener('click', () => {
@@ -300,22 +331,27 @@ waitlistDoneBtn.addEventListener('click', () => {
 });
 
 // ── Login / Auth ──
-const VALID_ID = '124';
 const CUSTOMER_LS_KEY = 'sweepstakes_user';
+const USER_LS_KEY = 'discord_user';
 
 function isLoggedIn() {
-    return localStorage.getItem(CUSTOMER_LS_KEY) === VALID_ID;
+    return !!localStorage.getItem(CUSTOMER_LS_KEY);
+}
+
+function getDiscordId() {
+    return localStorage.getItem(USER_LS_KEY) || '';
+}
+
+function setDiscordId(id) {
+    localStorage.setItem(USER_LS_KEY, id);
 }
 
 function updateNavAuth() {
-    const iconBtn = $('#profileIconBtn');
     const iconDefault = $('#profileIconDefault');
     const iconInitial = $('#profileIconInitial');
-    const ddSignIn = $('#ddSignIn');
-    const ddProfile = $('#ddProfile');
-    const ddSettings = $('#ddSettings');
-    const ddDivider = $('#ddDivider');
-    const ddLogout = $('#ddLogout');
+    const authPanel = $('#ddAuthPanel');
+    const userPanel = $('#ddUserPanel');
+    const getStartedBtn = $('#getStartedBtn');
 
     $$('.nav-tab[data-auth="required"]').forEach(t => {
         t.style.display = isLoggedIn() ? '' : 'none';
@@ -324,62 +360,137 @@ function updateNavAuth() {
     if (isLoggedIn()) {
         iconDefault.style.display = 'none';
         iconInitial.style.display = 'flex';
-        iconInitial.textContent = localStorage.getItem(CUSTOMER_LS_KEY)?.charAt(0) || '?';
-        ddSignIn.style.display = 'none';
-        ddProfile.style.display = 'flex';
-        ddSettings.style.display = 'flex';
-        ddDivider.style.display = 'block';
-        ddLogout.style.display = 'flex';
+        iconInitial.textContent = getDiscordId().charAt(0).toUpperCase() || '?';
+        authPanel.style.display = 'none';
+        userPanel.style.display = 'block';
+        getStartedBtn.style.display = 'none';
     } else {
         iconDefault.style.display = 'block';
         iconInitial.style.display = 'none';
-        ddSignIn.style.display = 'flex';
-        ddProfile.style.display = 'none';
-        ddSettings.style.display = 'none';
-        ddDivider.style.display = 'none';
-        ddLogout.style.display = 'none';
+        authPanel.style.display = 'block';
+        userPanel.style.display = 'none';
+        getStartedBtn.style.display = 'inline-flex';
     }
 }
 
-function toggleProfileDropdown(e) {
-    e.stopPropagation();
-    const dd = $('#profileDropdown');
-    dd.classList.toggle('show');
+function handleLogin() {
+    const discord = $('#ddLoginDiscord').value.trim();
+    const password = $('#ddLoginPassword').value.trim();
+    const msg = $('#ddLoginMsg');
+
+    if (!discord || !password) {
+        msg.textContent = 'Please fill in all fields.';
+        msg.style.display = 'block';
+        return;
+    }
+
+    // Simple local auth: discord ID is the key, any password works
+    // In production this would validate against a server
+    setDiscordId(discord);
+    localStorage.setItem(CUSTOMER_LS_KEY, discord);
+    if (!localStorage.getItem('member_since')) {
+        localStorage.setItem('member_since', Date.now().toString());
+    }
+    localStorage.setItem('last_login', Date.now().toString());
+    updateNavAuth();
+    $('#ddLoginDiscord').value = '';
+    $('#ddLoginPassword').value = '';
+    msg.style.display = 'none';
+    navigateTo('dashboard');
 }
 
-function hideProfileDropdown() {
-    // Dropdown hides automatically via CSS hover,
-    // but we keep this for click-outside-to-close behavior
+function handleRegister() {
+    const email = $('#ddRegisterEmail').value.trim();
+    const discord = $('#ddRegisterDiscord').value.trim();
+    const password = $('#ddRegisterPassword').value.trim();
+    const msg = $('#ddRegisterMsg');
+
+    if (!email || !discord || !password) {
+        msg.textContent = 'Please fill in all fields.';
+        msg.style.display = 'block';
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = 'Please enter a valid email.';
+        msg.style.display = 'block';
+        return;
+    }
+
+    msg.style.display = 'none';
+
+    // Send registration to server for admin approval
+    fetch(API_BASE_URL + '/api/waitlist-apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, discord, password, type: 'registration' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        msg.style.color = 'var(--green)';
+        msg.textContent = 'Registration submitted! Awaiting admin approval.';
+        msg.style.display = 'block';
+
+        // Poll for approval
+        let pollCount = 0;
+        const poll = setInterval(() => {
+            pollCount++;
+            fetch(API_BASE_URL + '/api/check-approval?discord=' + encodeURIComponent(discord))
+                .then(r => r.json())
+                .then(d => {
+                    if (d.approved && d.license_id) {
+                        clearInterval(poll);
+                        setDiscordId(discord);
+                        localStorage.setItem(CUSTOMER_LS_KEY, d.license_id);
+                        localStorage.setItem('member_since', Date.now().toString());
+                        localStorage.setItem('last_login', Date.now().toString());
+                        updateNavAuth();
+                        msg.style.display = 'none';
+                        navigateTo('dashboard');
+                    }
+                })
+                .catch(() => {});
+            if (pollCount > 120) clearInterval(poll);
+        }, 5000);
+    })
+    .catch(() => {
+        msg.style.color = 'var(--red)';
+        msg.textContent = 'Server error. Try again later.';
+        msg.style.display = 'block';
+    });
 }
 
-// Profile icon dropdown (hover-based via CSS, click on items only)
-$('#profileIconBtn').addEventListener('click', (e) => e.stopPropagation()); // prevent document click
-// Keep dropdown open while hovering the wrap
-$('.profile-icon-wrap').addEventListener('mouseenter', () => {});
-$('.profile-icon-wrap').addEventListener('mouseleave', () => {
-    // CSS hover handles visibility; this is a no-op for safety
+function handleLogout() {
+    localStorage.removeItem(CUSTOMER_LS_KEY);
+    localStorage.removeItem(USER_LS_KEY);
+    updateNavAuth();
+    navigateTo('home');
+}
+
+// ── Auth tab switching ──
+$$('.dd-auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        $$('.dd-auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const form = tab.dataset.authTab;
+        $('#ddLoginForm').style.display = form === 'login' ? 'flex' : 'none';
+        $('#ddRegisterForm').style.display = form === 'register' ? 'flex' : 'none';
+        $$('.dd-auth-msg').forEach(m => m.style.display = 'none');
+    });
 });
 
-// Dropdown items
-$('#ddSignIn').addEventListener('click', openLoginModal);
-$('#ddProfile').addEventListener('click', () => { navigateTo('profile'); });
-$('#ddSettings').addEventListener('click', () => { navigateTo('profile'); });
+// Auth form submissions
+$('#ddLoginBtn').addEventListener('click', handleLogin);
+$('#ddLoginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+$('#ddRegisterBtn').addEventListener('click', handleRegister);
+$('#ddRegisterPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); });
+
+// Logout
 $('#ddLogout').addEventListener('click', handleLogout);
 
-// Login modal event listeners
-$('#loginSubmit').addEventListener('click', handleLogin);
-$('#loginModalClose').addEventListener('click', () => closeModal('loginModal'));
-$('#loginModal').addEventListener('click', e => {
-    if (e.target === $('#loginModal')) closeModal('loginModal');
-});
-$('#loginId').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleLogin();
-});
-$('#loginPlansLink').addEventListener('click', e => {
-    e.preventDefault();
-    closeModal('loginModal');
-    navigateTo('plans');
-});
+// Dropdown: hover behavior (CSS handles visibility)
+// Clicking items in dropdown
+$('#ddProfile').addEventListener('click', () => navigateTo('profile'));
+$('#ddSettings').addEventListener('click', () => navigateTo('profile'));
 
 // ── Profile page ──
 const PROFILE_LS_KEY = 'profile_data';
@@ -390,12 +501,24 @@ function initProfile() {
 
     // Avatar letter
     const letter = $('#profileAvatarLetter');
-    if (letter) letter.textContent = VALID_ID.charAt(0);
+    if (letter) letter.textContent = getDiscordId().charAt(0).toUpperCase() || '?';
+
+    // Name
+    const nameEl = $('#profileName');
+    if (nameEl) nameEl.textContent = getDiscordId() || 'Customer';
 
     // Member since
     const ms = localStorage.getItem('member_since');
     const joinDate = ms ? new Date(parseInt(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
     $$('#profileJoinDate, #profileJoinDate2').forEach(el => { if (el) el.textContent = joinDate; });
+
+    // Discord ID display
+    const licEl = $('#profileLicenseId');
+    if (licEl) licEl.textContent = getDiscordId() || '—';
+
+    // Email
+    const emailEl = $('#profileEmail');
+    if (emailEl) emailEl.textContent = 'glowrius@proton.me';
 
     // Last login
     const ll = localStorage.getItem('last_login');
@@ -467,7 +590,7 @@ $('#profileSaveBioBtn')?.addEventListener('click', () => {
     const edit = $('#profileBioEdit');
     if (!input || !text || !display || !edit) return;
     const val = input.value.trim();
-    text.textContent = val || 'No bio yet. Tell the community about yourself.';
+    text.textContent = val || 'Write something about yourself...';
     const saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
     saved.bio = val;
     localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
@@ -490,14 +613,24 @@ $('#profileBioInput')?.addEventListener('input', () => {
     if (el && input) el.textContent = input.value.length + '/300';
 });
 
-// Profile: save discord
+// Profile: save discord with visual feedback
 $('#profileSaveDiscord')?.addEventListener('click', () => {
     const input = $('#profileDiscord');
     if (!input) return;
     const saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
     saved.discord = input.value.trim();
     localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
-    input.blur();
+
+    const btn = $('#profileSaveDiscord');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    btn.style.background = 'rgba(34,197,94,0.2)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.style.background = '';
+        btn.style.borderColor = '';
+    }, 1500);
 });
 
 // Profile: theme toggle
@@ -546,7 +679,7 @@ function initDashboard() {
         cancelBtn.className = 'btn btn-primary';
         cancelBtn.onclick = () => navigateTo('home');
         const loginBtn = $('#dashLoginBtn');
-        if (loginBtn) loginBtn.onclick = () => openLoginModal();
+        if (loginBtn) loginBtn.onclick = () => navigateTo('home');
         return;
     }
 
@@ -670,6 +803,17 @@ $('#adminLoginBtn').addEventListener('click', () => {
 });
 
 // ── Init ──
+
+// Restore saved theme
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    const lt = $('#profileThemeLight');
+    const dt = $('#profileThemeDark');
+    if (lt) lt.classList.add('active');
+    if (dt) dt.classList.remove('active');
+}
+
 renderTestimonials();
 renderFAQ();
 updateNavAuth();
