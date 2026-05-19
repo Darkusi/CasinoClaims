@@ -1,5 +1,5 @@
 // ── Configuration ──
-const API_BASE_URL = 'https://claims-casino-api.onrender.com'; // ← change this after Render deploy
+const API_BASE_URL = 'https://casinoclaims.onrender.com';
 
 // ── Testimonials Data ──
 const testimonials = [
@@ -348,69 +348,22 @@ function toggleProfileDropdown(e) {
 }
 
 function hideProfileDropdown() {
-    $('#profileDropdown').classList.remove('show');
+    // Dropdown hides automatically via CSS hover,
+    // but we keep this for click-outside-to-close behavior
 }
 
-function handleLogin() {
-    const input = $('#loginId');
-    const error = $('#loginError');
-    const val = input.value.trim();
-
-    if (!val) {
-        error.textContent = 'Please enter your license ID.';
-        error.classList.add('visible');
-        input.classList.add('error');
-        return;
-    }
-
-    if (val !== VALID_ID) {
-        error.textContent = 'Invalid license ID. Please try again.';
-        error.classList.add('visible');
-        input.classList.add('error');
-        return;
-    }
-
-    localStorage.setItem(CUSTOMER_LS_KEY, val);
-    if (!localStorage.getItem('member_since')) {
-        localStorage.setItem('member_since', Date.now().toString());
-    }
-    localStorage.setItem('last_login', Date.now().toString());
-    updateNavAuth();
-    closeModal('loginModal');
-    input.value = '';
-    input.classList.remove('error');
-    error.classList.remove('visible');
-    hideProfileDropdown();
-}
-
-function handleLogout() {
-    localStorage.removeItem(CUSTOMER_LS_KEY);
-    updateNavAuth();
-    navigateTo('home');
-    hideProfileDropdown();
-}
-
-function openLoginModal() {
-    $('#loginId').value = '';
-    $('#loginId').classList.remove('error');
-    $('#loginError').classList.remove('visible');
-    $('#loginModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => $('#loginId').focus(), 100);
-    hideProfileDropdown();
-}
-
-// Profile icon dropdown
-$('#profileIconBtn').addEventListener('click', toggleProfileDropdown);
-document.addEventListener('click', e => {
-    const wrap = $('.profile-icon-wrap');
-    if (wrap && !wrap.contains(e.target)) hideProfileDropdown();
+// Profile icon dropdown (hover-based via CSS, click on items only)
+$('#profileIconBtn').addEventListener('click', (e) => e.stopPropagation()); // prevent document click
+// Keep dropdown open while hovering the wrap
+$('.profile-icon-wrap').addEventListener('mouseenter', () => {});
+$('.profile-icon-wrap').addEventListener('mouseleave', () => {
+    // CSS hover handles visibility; this is a no-op for safety
 });
 
 // Dropdown items
 $('#ddSignIn').addEventListener('click', openLoginModal);
-$('#ddProfile').addEventListener('click', () => { hideProfileDropdown(); navigateTo('profile'); });
-$('#ddSettings').addEventListener('click', () => { hideProfileDropdown(); navigateTo('profile'); });
+$('#ddProfile').addEventListener('click', () => { navigateTo('profile'); });
+$('#ddSettings').addEventListener('click', () => { navigateTo('profile'); });
 $('#ddLogout').addEventListener('click', handleLogout);
 
 // Login modal event listeners
@@ -697,51 +650,24 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     }, 1500);
 });
 
-// ── Money Matrix Rain ──
-(function initMoneyMatrix() {
-    const canvas = document.getElementById('moneyMatrix');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    let W, H;
-    function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
+// ── Admin Login ──
+$('#adminLoginBtn').addEventListener('click', () => {
+    const user = $('#adminUsername').value.trim();
+    const pass = $('#adminPassword').value.trim();
+    const err = $('#adminError');
+    if (!user || !pass) {
+        err.textContent = 'Please enter username and password.';
+        err.style.display = 'block';
+        return;
     }
-    resize();
-    window.addEventListener('resize', resize);
-
-    const chars = ['$', '€', '₿', '¢', '¥', '£', '💰', '💵', '💎', '✦', '⟡', '◈'];
-    const fontSize = 14;
-    const cols = Math.ceil(W / fontSize);
-    const drops = Array(cols).fill(1);
-
-    function draw() {
-        ctx.fillStyle = 'rgba(10, 10, 10, 0.08)';
-        ctx.fillRect(0, 0, W, H);
-
-        for (let i = 0; i < cols; i++) {
-            const x = i * fontSize;
-            const y = drops[i] * fontSize;
-            const char = chars[Math.floor(Math.random() * chars.length)];
-
-            const brightness = Math.max(0.3, 1 - (y / H) * 0.7);
-            const r = Math.floor(140 * brightness);
-            const g = Math.floor(220 * brightness);
-            const b = Math.floor(100 * brightness);
-            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${brightness * 0.6})`;
-            ctx.font = `${fontSize}px monospace`;
-            ctx.fillText(char, x, y);
-
-            if (y > H && Math.random() > 0.975) {
-                drops[i] = 0;
-            }
-            drops[i]++;
-        }
+    if (user === 'admin' && pass === 'admin123') {
+        err.style.display = 'none';
+        window.open(API_BASE_URL + '/admin', '_blank');
+    } else {
+        err.textContent = 'Invalid credentials.';
+        err.style.display = 'block';
     }
-
-    setInterval(draw, 50);
-})();
+});
 
 // ── Init ──
 renderTestimonials();

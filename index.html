@@ -10,8 +10,6 @@
 </head>
 <body>
 
-<canvas id="moneyMatrix"></canvas>
-
 <!-- Navigation -->
 <nav class="navbar">
     <div class="container nav-inner">
@@ -43,9 +41,21 @@
                     <div class="profile-dropdown-divider" id="ddDivider" style="display:none"></div>
                     <button class="profile-dropdown-item danger" id="ddLogout" style="display:none"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
+                </div>
+
+                <div class="profile-card">
+                    <h3><i class="fas fa-shield-alt"></i> Admin</h3>
+                    <div class="admin-login">
+                        <p class="admin-desc">Staff access to the management panel.</p>
+                        <input type="text" id="adminUsername" placeholder="Username" class="admin-input">
+                        <input type="password" id="adminPassword" placeholder="Password" class="admin-input">
+                        <button class="btn btn-primary btn-sm" id="adminLoginBtn">
+                            <i class="fas fa-lock"></i> Login
+                        </button>
+                        <div class="admin-error" id="adminError"></div>
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</button>
-        </div>
     </div>
 </nav>
 
