@@ -27,9 +27,6 @@ const faqData = [
 
 // ── State ──
 const API_BASE = window.location.origin;
-let carouselIndex = 0;
-let carouselTimer = null;
-const CAROUSEL_INTERVAL = 5000;
 
 // ── DOM refs ──
 const $ = (s, p) => (p || document).querySelector(s);
@@ -54,9 +51,8 @@ function navigateTo(pageId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (pageId === 'dashboard') initDashboard();
-    if (pageId === 'testimonials') startCarousel();
+    if (pageId === 'testimonials') renderTestimonials();
     if (pageId === 'profile') initProfile();
-    if (pageId === 'pros') { renderPros(); goToProsSlide(0); }
 }
 
 document.getElementById('navTabs').addEventListener('click', e => {
@@ -82,12 +78,12 @@ document.querySelector('.contact-info').addEventListener('click', e => {
 
 // ── Render Testimonials Carousel ──
 function renderTestimonials() {
-    const track = $('#carouselTrack');
-    track.innerHTML = testimonials.map((t, i) => {
+    const grid = $('#testimonialGrid');
+    if (!grid || grid.children.length > 0) return;
+    grid.innerHTML = testimonials.map((t, i) => {
         const months = Math.floor(Math.random() * 8) + 3;
         return `
         <div class="testimonial-card" style="animation-delay:${i * 0.1}s">
-            <div class="testimonial-card-glow"></div>
             <div class="testimonial-stars">
                 <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
             </div>
@@ -99,7 +95,6 @@ function renderTestimonials() {
                         <h4>${t.name}</h4>
                         <span class="testimonial-role">${t.role}</span>
                         <span class="testimonial-tag">${t.tag}</span>
-                        <span class="testimonial-location"><i class="fas fa-map-marker-alt"></i> ${t.location}</span>
                     </div>
                 </div>
                 <div class="testimonial-meta">
@@ -109,51 +104,7 @@ function renderTestimonials() {
             </div>
         </div>`;
     }).join('');
-
-    renderDots();
 }
-
-function renderDots() {
-    const dots = $('#carouselDots');
-    dots.innerHTML = testimonials.map((_, i) =>
-        `<button class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
-    ).join('');
-
-    dots.addEventListener('click', e => {
-        const dot = e.target.closest('.carousel-dot');
-        if (!dot) return;
-        goToSlide(parseInt(dot.dataset.index));
-    });
-}
-
-function goToSlide(index) {
-    const track = $('#carouselTrack');
-    const total = testimonials.length;
-    carouselIndex = (index + total) % total;
-    track.style.transform = `translateX(-${carouselIndex * 100}%)`;
-
-    $$('.carousel-dot').forEach((d, i) => {
-        d.classList.toggle('active', i === carouselIndex);
-    });
-
-    resetCarouselTimer();
-}
-
-function nextSlide() { goToSlide(carouselIndex + 1); }
-function prevSlide() { goToSlide(carouselIndex - 1); }
-
-function resetCarouselTimer() {
-    if (carouselTimer) clearInterval(carouselTimer);
-    carouselTimer = setInterval(nextSlide, CAROUSEL_INTERVAL);
-}
-
-function startCarousel() {
-    if (carouselTimer) return;
-    carouselTimer = setInterval(nextSlide, CAROUSEL_INTERVAL);
-}
-
-$('#carouselNext').addEventListener('click', nextSlide);
-$('#carouselPrev').addEventListener('click', prevSlide);
 
 // ── Render FAQ ──
 function renderFAQ() {
@@ -172,70 +123,34 @@ function renderFAQ() {
 }
 
 // ── Pros Section Data ──
-const prosData = [
-    { name: 'CryptoKing', tag: '@crypto_claimer', initials: 'CK', color: '#a855f7', earnings: '12,450 SC', strategy: 'Catches limited drops before they hit the front page.', detail: 'With 15-second alerts, CryptoKing snags high-value SC drops before the rush. "I used to miss everything. Now I catch 90% of S-tier offers before they sell out."' },
-    { name: 'BonusHunter', tag: '@auto_claim_goat', initials: 'BH', color: '#22c55e', earnings: '8,230 SC', strategy: 'Auto-claim bot collects daily bonuses while he sleeps.', detail: '"I set it up once and forgot about it. The auto-claimer runs 24/7 across 30+ casinos. Waking up to SC in my account never gets old."' },
-    { name: 'DailyGrinder', tag: '@never_miss', initials: 'DG', color: '#3b82f6', earnings: '6,780 SC', strategy: 'Zero missed free spins — tracks every casino rotation.', detail: '"Before this monitor, I was manually checking 20+ sites. Now I get pinged instantly. Havent missed a daily spin in 4 months."' },
-    { name: 'SweepStacker', tag: '@tier_hopper', initials: 'SS', color: '#f59e0b', earnings: '5,200 SC', strategy: 'Combines S, A, and B tier alerts for maximum yield.', detail: '"The tier system changed everything. I run S-tier for big hits, B-tier for volume. The combo alone doubled my monthly SC."' },
-    { name: 'NoSleepSC', tag: '@night_owl', initials: 'NS', color: '#ec4899', earnings: '4,900 SC', strategy: '24/7 monitoring catches overnight drops.', detail: '"The best SC drops happen at 3 AM when nobody is watching. My monitor never sleeps. Woke up to 800 SC last Tuesday alone."' },
-    { name: 'WalletWatcher', tag: '@filter_king', initials: 'WW', color: '#14b8a6', earnings: '3,850 SC', strategy: 'Filtered alerts mean zero noise, only winning plays.', detail: '"The filter system is the real MVP. I only get pinged for offers above 2 SC. No clutter, no FOMO, just consistent wins."' },
-];
-
-let prosIndex = 0;
-
-function renderPros() {
-    const track = $('#prosTrack');
-    if (!track) return;
-    track.innerHTML = prosData.map(p => `
-        <div class="pros-card">
-            <div class="pros-avatar" style="background:linear-gradient(135deg,${p.color},${p.color}88);">${p.initials}</div>
-            <div class="pros-card-body">
-                <div class="pros-name">${p.name}</div>
-                <span class="pros-tag">${p.tag}</span>
-                <div class="pros-earnings"><i class="fas fa-coins"></i> ${p.earnings}</div>
-                <div class="pros-strategy">${p.strategy}</div>
-                <div class="pros-detail" id="prosDetail_${prosData.indexOf(p)}">${p.detail}</div>
-                <button class="pros-read-more" data-index="${prosData.indexOf(p)}">Read more <i class="fas fa-chevron-down"></i></button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function goToProsSlide(index) {
-    const track = $('#prosTrack');
-    const total = prosData.length;
-    if (!track) return;
-    prosIndex = ((index % total) + total) % total;
-    track.style.transform = `translateX(-${prosIndex * 100}%)`;
-    updateProsBar();
-}
-
-function updateProsBar() {
-    const fill = $('#prosBarFill');
-    if (!fill) return;
-    const pct = (prosIndex / (prosData.length - 1)) * 100;
-    fill.style.width = pct + '%';
-}
-
-$('#prosTrack')?.addEventListener('click', e => {
-    const btn = e.target.closest('.pros-read-more');
-    if (!btn) return;
-    const idx = btn.dataset.index;
-    const detail = $('#prosDetail_' + idx);
-    if (detail) {
-        detail.classList.toggle('open');
-        btn.classList.toggle('open');
-        btn.innerHTML = detail.classList.contains('open') ? 'Read less <i class="fas fa-chevron-up"></i>' : 'Read more <i class="fas fa-chevron-down"></i>';
-    }
-});
-
-$('#prosNext')?.addEventListener('click', () => goToProsSlide(prosIndex + 1));
-$('#prosPrev')?.addEventListener('click', () => goToProsSlide(prosIndex - 1));
-
 // ── Hero/CTA buttons ──
 document.getElementById('getStartedBtn').addEventListener('click', () => navigateTo('plans'));
-document.getElementById('heroCta').addEventListener('click', () => navigateTo('plans'));
-document.getElementById('learnMoreBtn').addEventListener('click', () => navigateTo('features'));
+
+document.getElementById('heroCta').addEventListener('click', () => {
+    navigateTo('plans');
+    setTimeout(() => {
+        const section = $('#plans');
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            section.classList.remove('highlight-pulse');
+            void section.offsetWidth;
+            section.classList.add('highlight-pulse');
+        }
+    }, 200);
+});
+
+document.getElementById('learnMoreBtn').addEventListener('click', () => {
+    navigateTo('features');
+    setTimeout(() => {
+        const section = $('#features');
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            section.classList.remove('highlight-pulse');
+            void section.offsetWidth;
+            section.classList.add('highlight-pulse');
+        }
+    }, 200);
+});
 
 // ── Waitlist button opens modal ──
 document.getElementById('waitlistBtn').addEventListener('click', () => openWaitlistModal());
