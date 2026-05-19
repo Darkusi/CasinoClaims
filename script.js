@@ -34,6 +34,13 @@ const $$ = (s, p) => [...(p || document).querySelectorAll(s)];
 
 // ── Page Navigation ──
 function navigateTo(pageId) {
+    // Clear dashboard countdown if leaving
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        countdownActive = false;
+    }
+
     // Guard auth-required pages
     const tab = $(`.nav-tab[data-page="${pageId}"]`);
     if (tab && tab.hasAttribute('data-auth') && !isLoggedIn()) {
@@ -76,7 +83,7 @@ document.querySelector('.contact-info').addEventListener('click', e => {
     if (btn) { e.preventDefault(); navigateTo(btn.dataset.page); }
 });
 
-// ── Render Testimonials Carousel ──
+// ── Render Testimonials Grid ──
 function renderTestimonials() {
     const grid = $('#testimonialGrid');
     if (!grid || grid.children.length > 0) return;
@@ -122,7 +129,6 @@ function renderFAQ() {
     });
 }
 
-// ── Pros Section Data ──
 // ── Hero/CTA buttons ──
 document.getElementById('getStartedBtn').addEventListener('click', () => navigateTo('plans'));
 
@@ -407,6 +413,24 @@ $('#ddLogout').addEventListener('click', handleLogout);
 $('#ddProfile').addEventListener('click', () => navigateTo('profile'));
 $('#ddSettings').addEventListener('click', () => navigateTo('profile'));
 
+// ── Programmatic dropdown control ──
+function openProfileDropdown() {
+    const wrap = document.querySelector('.profile-icon-wrap');
+    if (wrap) wrap.classList.add('force-open');
+}
+
+function closeProfileDropdown() {
+    const wrap = document.querySelector('.profile-icon-wrap');
+    if (wrap) wrap.classList.remove('force-open');
+}
+
+document.addEventListener('click', e => {
+    const wrap = document.querySelector('.profile-icon-wrap');
+    if (wrap && wrap.classList.contains('force-open') && !wrap.contains(e.target)) {
+        closeProfileDropdown();
+    }
+});
+
 // ── Profile page ──
 const PROFILE_LS_KEY = 'profile_data';
 
@@ -563,14 +587,21 @@ $('#profileThemeLight')?.addEventListener('click', () => {
     $('#profileThemeDark')?.classList.remove('active');
 });
 
-// Profile nav button
-$('#profileBtn')?.addEventListener('click', () => navigateTo('profile'));
-
 // ── Dashboard Embed with Auth Gate ──
 let countdownActive = false;
 let countdownTimer = null;
+const DASHBOARD_HTML = ($('#dashboardPage') || {}).innerHTML || '';
+
+function restoreDashboardHTML() {
+    const container = $('#dashboardPage');
+    if (container && container.innerHTML !== DASHBOARD_HTML) {
+        container.innerHTML = DASHBOARD_HTML;
+    }
+}
 
 function initDashboard() {
+    restoreDashboardHTML();
+
     const msg = $('#dashRedirectMsg');
     const gateMsg = $('#dashGateMsg');
     const num = $('#countdownNum');
@@ -594,7 +625,7 @@ function initDashboard() {
         cancelBtn.className = 'btn btn-primary';
         cancelBtn.onclick = () => navigateTo('home');
         const loginBtn = $('#dashLoginBtn');
-        if (loginBtn) loginBtn.onclick = () => navigateTo('home');
+        if (loginBtn) loginBtn.onclick = () => { navigateTo('home'); openProfileDropdown(); };
         return;
     }
 
@@ -645,6 +676,9 @@ function startCountdown(numEl, circleEl, cancelBtn) {
     };
 
     countdownTimer = setInterval(() => {
+        const numEl = $('#countdownNum');
+        const circleEl = $('#countdownCircle');
+        if (!numEl || !circleEl) { clearInterval(countdownTimer); countdownTimer = null; return; }
         sec--;
         numEl.textContent = sec;
         const offset = circumference * (1 - sec / 5);

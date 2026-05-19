@@ -229,7 +229,8 @@ body {
     box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(168,85,247,0.06);
 }
 
-.profile-icon-wrap:hover .profile-dropdown {
+.profile-icon-wrap:hover .profile-dropdown,
+.profile-icon-wrap.force-open .profile-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
