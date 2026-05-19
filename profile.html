@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweepstakes Monitor — Free SC & Spins Alerts</title>
+    <title>Profile — Sweepstakes Monitor</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -18,7 +18,7 @@
             <span>Sweepstakes Monitor</span>
         </a>
         <div class="nav-links" id="navTabs">
-            <a href="index.html" class="nav-tab active">Home</a>
+            <a href="index.html" class="nav-tab">Home</a>
             <a href="plans.html" class="nav-tab">Plans</a>
             <a href="features.html" class="nav-tab">Features</a>
             <a href="testimonials.html" class="nav-tab">Testimonials</a>
@@ -45,80 +45,73 @@
         </div>
 </nav>
 
-<!-- HOME -->
-<section class="hero">
-    <div class="hero-glow"></div>
-    <canvas id="particleCanvas"></canvas>
-    <div class="container hero-inner">
-        <span class="hero-badge pulse-badge">
-            <span class="live-dot"></span> Live & Monitoring
-        </span>
-        <h1>Sweepstakes <span class="accent-text">Monitor</span></h1>
-        <p class="hero-subtitle">Elite mod & staff alert system — real-time signals, zero noise</p>
-        <p class="hero-desc">Get instant Discord alerts the moment sweepstakes are posted. Track free SC, free spins, and exclusive offers from 80+ casinos.</p>
-        <div class="hero-stats">
-            <div class="hero-stat">
-                <span class="hero-stat-val">80+</span>
-                <span class="hero-stat-lbl">Casinos Monitored</span>
-            </div>
-            <div class="hero-stat">
-                <span class="hero-stat-val">3</span>
-                <span class="hero-stat-lbl">Tiers (S/A/B)</span>
-            </div>
-            <div class="hero-stat">
-                <span class="hero-stat-val">&lt;15s</span>
-                <span class="hero-stat-lbl">Alert Speed</span>
-            </div>
-        </div>
-        <div class="hero-actions">
-            <button class="btn btn-primary btn-lg" id="heroCta">View Plans</button>
-            <button class="btn btn-outline btn-lg" id="learnMoreBtn">See Features</button>
-        </div>
-        <div class="hero-tiers">
-            <span class="tier-badge tier-s">S Tier</span>
-            <span class="tier-badge tier-a">A Tier</span>
-            <span class="tier-badge tier-b">B Tier</span>
-        </div>
-    </div>
-</section>
-
-<!-- Supported Sites -->
-<section class="supported-section">
+<!-- PROFILE -->
+<section class="section" id="profileSection">
     <div class="container">
-        <div class="section-header">
-            <h2>Supported Casinos</h2>
-            <p>Our software monitors and auto-claims from these leading social casinos.</p>
-        </div>
-        <div class="supported-grid">
-            <div class="supported-item">
-                <div class="supported-icon cc">
-                    <img src="https://imgs.search.brave.com/oksgFgc2DYwkAvPAFR329NuJv52bDE-ygj6lF1vZn9Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/d3NuLmNvbS9maWx0/ZXJzOmZvcm1hdCh3/ZWJwKS9maWx0ZXJz/OmZvcm1hdCh3ZWJw/KS9maXQtaW4vMzAw/eDMwMC8xNzA5NjQz/NzA0L2Nyb3duY29p/bnMucG5n" alt="Crown Coins">
+        <div class="profile-container">
+            <div class="profile-card">
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar" id="profileAvatar">G</div>
+                    <div class="avatar-pencil" id="avatarPencil"><i class="fas fa-pen"></i></div>
+                    <input type="file" id="avatarInput" accept="image/*">
                 </div>
-                <span class="supported-name">Crown Coins</span>
-            </div>
-            <div class="supported-item">
-                <div class="supported-icon rp">
-                    <img src="https://imgs.search.brave.com/nLDhnHTi3JpXSlCIAElFxh-h3-UZegdhFq1c9-4exL8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cy5i/ZXR0aW5nLm9uZWZv/b3RiYWxsLmNvbS93/cC1jb250ZW50L3Vw/bG9hZHMvMjAyNS8w/My9mZWF0dXJlLWlt/YWdlLXJlYWwtcHJp/emUud2VicA" alt="RealPrize">
+                <h2 class="profile-name" id="profileName">User</h2>
+                <p class="profile-discord" id="profileDiscord">Discord ID: —</p>
+                <p class="profile-bio" id="profileBio">No bio set yet.</p>
+                <div class="profile-bio-editor" id="profileBioEditor">
+                    <textarea id="bioTextarea" maxlength="300"></textarea>
+                    <div class="bio-editor-actions">
+                        <button class="btn btn-primary btn-sm" id="bioSaveBtn"><i class="fas fa-check"></i> Save</button>
+                        <button class="btn btn-outline btn-sm" id="bioCancelBtn"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
                 </div>
-                <span class="supported-name">RealPrize</span>
-            </div>
-            <div class="supported-item">
-                <div class="supported-icon rb">
-                    <img src="https://imgs.search.brave.com/RU7Fbv0bpZkFVfdASKgXQruY7A5ZMyIZvwhsChJA7Jk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zaS1m/bC13cC5zMy5hbWF6/b25hd3MuY29tL3dw/LWNvbnRlbnQvdXBs/b2Fkcy8yMDI1MDgy/NjA4NDkxNC9yZWJl/dC1wcm9tby1jb2Rl/LTEud2VicA" alt="ReBet">
+                <button class="btn btn-secondary btn-sm" id="profileEditBioBtn"><i class="fas fa-edit"></i> Edit Bio</button>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileStatClaims">—</span>
+                        <span class="profile-stat-label">Claims</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileStatCasinos">—</span>
+                        <span class="profile-stat-label">Casinos</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileStatValue">—</span>
+                        <span class="profile-stat-label">Value</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileStatSince">—</span>
+                        <span class="profile-stat-label">Member Since</span>
+                    </div>
                 </div>
-                <span class="supported-name">ReBet</span>
             </div>
-            <div class="supported-item">
-                <div class="supported-icon st">
-                    <img src="https://imgs.search.brave.com/1coPpRkB3yf04WJVOTGgSibjk7Yezc561jup-W_SmfQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS53ZWJvcGVkaWEu/Y29tL2ltYWdlcy9s/b2dvcy8xNzYxNDY3/NDE4ODY1XzY4ZmRk/YzFhN2ExZGI5ZjMz/ODYyYzkzOS5zdmc" alt="Stake">
+
+            <div class="profile-settings-card">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <div class="form-group">
+                    <label for="profileDiscordName">Discord Username</label>
+                    <div class="input-row">
+                        <input type="text" id="profileDiscordName" placeholder="Your Discord username">
+                        <button class="btn btn-primary btn-sm" id="profileSaveDiscord"><i class="fas fa-save"></i> Save</button>
+                    </div>
+                    <div class="form-msg" id="profileDiscordMsg"></div>
                 </div>
-                <span class="supported-name">Stake</span>
+                <div class="form-group">
+                    <label>Theme</label>
+                    <div class="theme-toggle-row">
+                        <span>Dark Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="themeToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <hr class="profile-divider">
+                <div class="admin-login-row">
+                    <span>Admin Panel</span>
+                    <button class="btn btn-secondary btn-sm" id="adminLoginBtn"><i class="fas fa-shield-alt"></i> Login</button>
+                </div>
             </div>
-        </div>
-        <div class="supported-more">
-            <span class="supported-more-line"></span>
-            <span class="supported-more-text">&amp; many more</span>
-            <span class="supported-more-line"></span>
         </div>
     </div>
 </section>

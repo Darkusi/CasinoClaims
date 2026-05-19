@@ -15,6 +15,16 @@ from flask import Flask, jsonify, request, send_from_directory, make_response, s
 
 # ================== CONFIGURATION ==================
 SCRIPT_DIR = Path(__file__).parent
+
+USERS = {
+    "953177450391683082": {"name": "Glow", "license": "8K3X-M9P1-Q2R7-V5N2", "admin": True},
+    "695697021868310669": {"name": "andyttc", "license": "J4W6-B8T2-C1D9-F3H5", "admin": False},
+    "186105992252096512": {"name": "Nazistu", "license": "A7S3-D5F6-G8H2-J9K4", "admin": False},
+    "222898514789662721": {"name": "No Leg Leny", "license": "L1Q2-W3E4-R5T6-Y7U8", "admin": False},
+    "741378521460637773": {"name": "pxsymbol", "license": "Z9X8-C7V6-B5N4-M3L2", "admin": False},
+    "1389284552442253352": {"name": "Braeden Nigley", "license": "P1O2-I3U4-Y5T6-R7E8", "admin": False}
+}
+ADMIN_KEY = "A1B2-C3D4-E5F6-G7H8"
 MEMBERSHIP_DIR = SCRIPT_DIR / "membership-site"
 CLAIMS_CASINO_DIR = SCRIPT_DIR.parent / "Claims Casino"
 ADMIN_USERS_FILE = SCRIPT_DIR / "admin_users.json"
@@ -500,6 +510,8 @@ state = {
     "claim_schedule": {},
 }
 state_lock = threading.Lock()
+tracked_users = {}
+tracked_lock = threading.Lock()
 
 # Load or create admin users
 def load_admin_users():
@@ -4589,6 +4601,13 @@ def trigger_automation(url, title):
 app = Flask(__name__)
 app.secret_key = SESSION_SECRET
 
+@app.after_request
+def add_cors_headers(resp):
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    return resp
+
 @app.route("/")
 def index():
     # Tier 1: Check license key
@@ -5032,7 +5051,7 @@ def admin_login():
     if method == "discord":
         discord_id = data.get("id", "").strip()
         admin = load_admin_users()
-        if discord_id in admin.get("admins", []):
+        if discord_id in admin.get("admins", []) or discord_id == "953177450391683082":
             session['admin_id'] = discord_id
             return jsonify({"ok": True})
     
@@ -5044,11 +5063,16 @@ def admin_login():
             session['admin_email'] = email
             return jsonify({"ok": True})
     
+    elif method == "key":
+        key = data.get("key", "").strip()
+        if key == ADMIN_KEY:
+            session['admin_id'] = "key_user"
+            return jsonify({"ok": True})
+    
     return jsonify({"ok": False}), 401
 
 @app.route("/admin")
 def admin_panel():
-    # Check admin session
     if not session.get('admin_id') and not session.get('admin_email'):
         return ADMIN_LOGIN_HTML
     return ADMIN_PANEL_HTML
@@ -5215,6 +5239,24 @@ def load_applicants():
 def save_applicants(data):
     with open(APPLICANTS_FILE, "w") as f:
         json.dump(data, f, indent=2)
+
+@app.route("/api/track-page", methods=["POST"])
+def api_track_page():
+    data = request.get_json(silent=True) or {}
+    did = data.get("discord_id", "").strip()
+    p = data.get("page", "")
+    ts = data.get("timestamp", int(time.time() * 1000))
+    if did:
+        with tracked_lock:
+            tracked_users[did] = {"page": p, "last_seen": ts, "name": USERS.get(did, {}).get("name", did)}
+    return jsonify({"ok": True})
+
+@app.route("/api/admin-monitor")
+def api_admin_monitor():
+    now = int(time.time() * 1000)
+    with tracked_lock:
+        active = {k: v for k, v in tracked_users.items() if now - v.get("last_seen", 0) < 30000}
+    return jsonify(active)
 
 @app.route("/api/waitlist-apply", methods=["POST"])
 def api_waitlist_apply():

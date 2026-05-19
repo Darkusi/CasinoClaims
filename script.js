@@ -1,439 +1,72 @@
-// ── Configuration ──
 const API_BASE_URL = 'https://casinoclaims.onrender.com';
-
-// ── Testimonials Data ──
-const testimonials = [
-    { name: 'Marcus C.', role: 'sweeps engineer', location: 'San Francisco, CA', initials: 'MC', color: '#a855f7', tag: '@marc_sweeps', quote: 'been on the monitor for 2 weeks and already caught 3 limited drops that I would have 100% missed. the 15 second alerts are insane.' },
-    { name: 'Jessica T.', role: 'auto-claimer', location: 'Austin, TX', initials: 'JT', color: '#22c55e', tag: '@jtorres_sc', quote: 'I was sleeping on free SC for months. this bot pays for itself in the first week easy. just hit my first $50 day.' },
-    { name: 'David P.', role: 'bonus collector', location: 'Seattle, WA', initials: 'DP', color: '#f59e0b', tag: '@dp_bonus', quote: 'the auto-claim feature is goated. I have 30+ casinos set up and it just collects while I work. no more login fatigue.' },
-    { name: 'Ryan M.', role: 'full-time claimer', location: 'Denver, CO', initials: 'RM', color: '#3b82f6', tag: '@ryan_cashes', quote: 'tried the free alert servers before and they were always 5 min late. here I get notified before the post even hits hot. huge diff.' },
-    { name: 'Sarah B.', role: 'daily grinder', location: 'Chicago, IL', initials: 'SB', color: '#ec4899', tag: '@sarah_grind', quote: 'joined the waitlist back in january, got in february batch. best $0 I ever spent waiting lol. the S tier alerts are cracked.' },
-    { name: 'Tyler W.', role: 'sc hoarder', location: 'Atlanta, GA', initials: 'TW', color: '#14b8a6', tag: '@tyler_stacks', quote: 'the kick monitor caught a streamer drop that nobody else had. felt like a cheat code. this community is legit.' },
-    { name: 'Amanda F.', role: '24/7 member', location: 'Phoenix, AZ', initials: 'AF', color: '#f97316', tag: '@amanda_247', quote: 'my buddy told me about this and I thought he was capping. then I saw his dashboard with 80+ casinos tracked. instantly sold.' },
-    { name: 'Kevin L.', role: 'spin specialist', location: 'Miami, FL', initials: 'KL', color: '#8b5cf6', tag: '@kevin_spinz', quote: 'not even trying to max SC, just want the free spins. the filter system lets me see only spin offers. exactly what I needed.' },
-    { name: 'Emily R.', role: 'crypto degen', location: 'Portland, OR', initials: 'ER', color: '#06b6d4', tag: '@emily_rus', quote: 'the dashboard is clean af. love seeing the live stats and how much SC Ive stacked over time. UI is smooth.' },
-];
-
-const faqData = [
-    { q: 'What is Sweepstakes Monitor?', a: 'Sweepstakes Monitor is a premium alert system that monitors Reddit and other sources for free Sweeps Coins (SC) and free spins offers from social casinos. We send instant Discord alerts so you never miss an opportunity.' },
-    { q: 'How fast are the alerts?', a: 'Alerts are typically sent within 15 seconds of a post being published. This is significantly faster than free alert groups which have 6-8 minute delays.' },
-    { q: 'Which casinos do you monitor?', a: 'We monitor 80+ social casinos across three tiers: S Tier (28 casinos like Crown Coins, McLuck, Pulsz, Stake.us), A Tier (31 casinos), and B Tier (22 casinos). The full list is accessible to members.' },
-    { q: 'Is there a waitlist?', a: 'Yes. All spots are currently filled. You can join the waitlist with your email and we will notify you the moment a new batch opens up. Spots are first come, first served.' },
-    { q: 'How much does it cost?', a: 'Elite Access is a one-time payment. Pricing for the next batch will be announced when spots open. Previous batches were $299 lifetime.' },
-    { q: 'How do I get notified when spots open?', a: 'Join the waitlist with your email (and optionally your Discord username). We will send you an email the moment a new batch drops. You will have 24 hours to claim your spot.' },
-    { q: 'How do I receive alerts?', a: 'Alerts are sent to our private Discord server. You will receive an invite link after purchasing your license key.' },
-    { q: 'Can I claim bonuses automatically?', a: 'Yes, members get access to the auto-claim bot that automatically logs into your casino accounts and claims daily bonuses on a 24-hour schedule.' },
-];
-
-// ── State ──
-const API_BASE = window.location.origin;
-
-// ── DOM refs ──
+let countdownActive = false;
+let countdownTimer = null;
 const $ = (s, p) => (p || document).querySelector(s);
 const $$ = (s, p) => [...(p || document).querySelectorAll(s)];
-
-// ── Page Navigation ──
-function navigateTo(pageId) {
-    // Clear dashboard countdown if leaving
-    if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-        countdownActive = false;
-    }
-
-    // Guard auth-required pages
-    const tab = $(`.nav-tab[data-page="${pageId}"]`);
-    if (tab && tab.hasAttribute('data-auth') && !isLoggedIn()) {
-        pageId = 'home';
-    }
-
-    $$('.page').forEach(p => p.classList.remove('active'));
-    const target = $(`.page[data-page="${pageId}"]`);
-    if (target) target.classList.add('active');
-
-    $$('.nav-tab').forEach(t => t.classList.remove('active'));
-    const tab2 = $(`.nav-tab[data-page="${pageId}"]`);
-    if (tab2) tab2.classList.add('active');
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    if (pageId === 'dashboard') initDashboard();
-    if (pageId === 'testimonials') renderTestimonials();
-    if (pageId === 'profile') initProfile();
-}
-
-const navTabs = document.getElementById('navTabs');
-if (navTabs) {
-    navTabs.addEventListener('click', e => {
-        const tab = e.target.closest('.nav-tab');
-        if (!tab) return;
-        navigateTo(tab.dataset.page);
-    });
-}
-
-const logo = document.querySelector('.logo');
-if (logo) {
-    logo.addEventListener('click', e => {
-        e.preventDefault();
-        navigateTo('home');
-    });
-}
-
-const footerLinks = document.querySelector('.footer-links');
-if (footerLinks) {
-    footerLinks.addEventListener('click', e => {
-        const link = e.target.closest('[data-page]');
-        if (link) { e.preventDefault(); navigateTo(link.dataset.page); }
-    });
-}
-
-const contactInfo = document.querySelector('.contact-info');
-if (contactInfo) {
-    contactInfo.addEventListener('click', e => {
-        const btn = e.target.closest('.link-btn');
-        if (btn) { e.preventDefault(); navigateTo(btn.dataset.page); }
-    });
-}
-
-// ── Render Testimonials Grid ──
-function renderTestimonials() {
-    const grid = $('#testimonialGrid');
-    if (!grid || grid.children.length > 0) return;
-    grid.innerHTML = testimonials.map((t, i) => {
-        const months = Math.floor(Math.random() * 8) + 3;
-        return `
-        <div class="testimonial-card" style="animation-delay:${i * 0.1}s">
-            <div class="testimonial-stars">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            </div>
-            <div class="testimonial-quote">"${t.quote}"</div>
-            <div class="testimonial-footer">
-                <div class="testimonial-author">
-                    <div class="testimonial-avatar" style="background: linear-gradient(135deg, ${t.color}, ${t.color}88)">${t.initials}</div>
-                    <div class="testimonial-info">
-                        <h4>${t.name}</h4>
-                        <span class="testimonial-role">${t.role}</span>
-                        <span class="testimonial-tag">${t.tag}</span>
-                    </div>
-                </div>
-                <div class="testimonial-meta">
-                    <span class="testimonial-verified"><i class="fas fa-check-circle"></i> Verified Member</span>
-                    <span class="testimonial-date">${months} months ago</span>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-// ── Render FAQ ──
-function renderFAQ() {
-    $('#faqList').innerHTML = faqData.map(f => `
-        <div class="faq-item">
-            <div class="faq-question">${f.q} <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">${f.a}</div>
-        </div>
-    `).join('');
-
-    $('#faqList').addEventListener('click', e => {
-        const item = e.target.closest('.faq-item');
-        if (!item) return;
-        item.classList.toggle('open');
-    });
-}
-
-// ── Hero/CTA buttons ──
-document.getElementById('getStartedBtn').addEventListener('click', () => navigateTo('plans'));
-
-document.getElementById('heroCta').addEventListener('click', () => {
-    navigateTo('plans');
-    setTimeout(() => {
-        const section = $('#plans');
-        if (section) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            section.classList.remove('highlight-pulse');
-            void section.offsetWidth;
-            section.classList.add('highlight-pulse');
-        }
-    }, 200);
-});
-
-document.getElementById('learnMoreBtn').addEventListener('click', () => {
-    navigateTo('features');
-    setTimeout(() => {
-        const section = $('#features');
-        if (section) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            section.classList.remove('highlight-pulse');
-            void section.offsetWidth;
-            section.classList.add('highlight-pulse');
-        }
-    }, 200);
-});
-
-// ── Waitlist button opens modal ──
-document.getElementById('waitlistBtn').addEventListener('click', () => openWaitlistModal());
-
-// ── Waitlist Modal ──
-const waitlistModal = $('#waitlistModal');
-const waitlistSubmit = $('#waitlistSubmit');
-const waitlistDoneBtn = $('#waitlistDoneBtn');
-const waitlistLoading = $('#waitlistLoading');
-const waitlistLoadingText = $('#waitlistLoadingText');
-const waitlistPosition = $('#waitlistPosition');
-const waitlistStepForm = $('#waitlistStepForm');
-const waitlistStepSuccess = $('#waitlistStepSuccess');
-const waitlistEmail = $('#waitlistEmail');
-const waitlistDiscord = $('#waitlistDiscord');
-
-function openWaitlistModal() {
-    waitlistStepForm.style.display = 'block';
-    waitlistStepSuccess.style.display = 'none';
-    waitlistLoading.style.display = 'none';
-    waitlistModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal(modalId) {
-    if (modalId) {
-        $('#' + modalId).classList.remove('active');
-    } else {
-        waitlistModal.classList.remove('active');
-    }
-    document.body.style.overflow = '';
-}
-
-$('#modalClose').addEventListener('click', () => closeModal());
-waitlistModal.addEventListener('click', e => {
-    if (e.target === waitlistModal) closeModal();
-});
-
-waitlistSubmit.addEventListener('click', () => {
-    const email = waitlistEmail.value.trim();
-    const discord = waitlistDiscord.value.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        waitlistEmail.classList.add('error');
-        return;
-    }
-    waitlistEmail.classList.remove('error');
-
-    waitlistStepForm.style.display = 'none';
-    waitlistLoading.style.display = 'flex';
-    waitlistLoadingText.textContent = 'Submitting your application...';
-
-    fetch(API_BASE_URL + '/api/waitlist-apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, discord, type: 'waitlist' })
-    })
-    .then(r => r.json())
-    .then(data => {
-        waitlistPosition.textContent = '#' + (data.position || Math.floor(Math.random() * 200) + 5);
-        waitlistLoading.style.display = 'none';
-        waitlistStepSuccess.style.display = 'block';
-
-        // Poll for approval
-        let pollCount = 0;
-        const poll = setInterval(() => {
-            pollCount++;
-            fetch(API_BASE_URL + '/api/check-approval?email=' + encodeURIComponent(email))
-                .then(r => r.json())
-                .then(d => {
-                    if (d.approved && d.license_id) {
-                        clearInterval(poll);
-                        localStorage.setItem(CUSTOMER_LS_KEY, d.license_id);
-                        if (discord) setDiscordId(discord);
-                        localStorage.setItem('member_since', Date.now().toString());
-                        localStorage.setItem('last_login', Date.now().toString());
-                        updateNavAuth();
-                        closeModal();
-                        navigateTo('dashboard');
-                    }
-                })
-                .catch(() => {});
-            if (pollCount > 120) clearInterval(poll); // stop after 10 min
-        }, 5000);
-    })
-    .catch(() => {
-        waitlistLoadingText.textContent = 'Server error. Try again later.';
-    });
-});
-
-waitlistDoneBtn.addEventListener('click', () => {
-    closeModal();
-    navigateTo('home');
-});
-
-// ── Login / Auth ──
+const page = window.location.pathname.split('/').pop() || 'index.html';
 const CUSTOMER_LS_KEY = 'sweepstakes_user';
 const USER_LS_KEY = 'discord_user';
+const ADMIN_LS_KEY = 'sweepstakes_is_admin';
+const PROFILE_LS_KEY = 'profile_data';
+const AVATAR_LS_KEY = 'profile_avatar';
 
-function isLoggedIn() {
-    return !!localStorage.getItem(CUSTOMER_LS_KEY);
-}
+const USERS = {
+    "953177450391683082": { name: "Glow",     license: "8K3X-M9P1-Q2R7-V5N2", admin: true },
+    "695697021868310669": { name: "andyttc",  license: "J4W6-B8T2-C1D9-F3H5", admin: false },
+    "186105992252096512": { name: "Nazistu",  license: "A7S3-D5F6-G8H2-J9K4", admin: false },
+    "222898514789662721": { name: "No Leg Leny", license: "L1Q2-W3E4-R5T6-Y7U8", admin: false },
+    "741378521460637773": { name: "pxsymbol", license: "Z9X8-C7V6-B5N4-M3L2", admin: false },
+    "1389284552442253352": { name: "Braeden Nigley", license: "P1O2-I3U4-Y5T6-R7E8", admin: false }
+};
+const ADMIN_KEY = "A1B2-C3D4-E5F6-G7H8";
 
-function getDiscordId() {
-    return localStorage.getItem(USER_LS_KEY) || '';
-}
-
-function setDiscordId(id) {
-    localStorage.setItem(USER_LS_KEY, id);
-}
+function isLoggedIn() { return !!localStorage.getItem(CUSTOMER_LS_KEY); }
+function getDiscordId() { return localStorage.getItem(USER_LS_KEY) || ''; }
+function setDiscordId(id) { localStorage.setItem(USER_LS_KEY, id); }
+function getUserName() { return localStorage.getItem('display_name') || getDiscordId() || 'User'; }
 
 function updateNavAuth() {
     const iconDefault = $('#profileIconDefault');
     const iconInitial = $('#profileIconInitial');
     const userPanel = $('#ddUserPanel');
     const getStartedBtn = $('#getStartedBtn');
-
     $$('.nav-tab[data-auth="required"]').forEach(t => {
         t.style.display = isLoggedIn() ? '' : 'none';
     });
-
     if (isLoggedIn()) {
-        iconDefault.style.display = 'none';
-        iconInitial.style.display = 'flex';
-        iconInitial.textContent = getDiscordId().charAt(0).toUpperCase() || '?';
-        userPanel.style.display = 'block';
-        getStartedBtn.style.display = 'none';
+        if (iconDefault) iconDefault.style.display = 'none';
+        if (iconInitial) { iconInitial.style.display = 'flex'; iconInitial.textContent = getUserName().charAt(0).toUpperCase(); }
+        if (userPanel) userPanel.style.display = 'block';
+        if (getStartedBtn) getStartedBtn.style.display = 'none';
+        const savedAvatar = localStorage.getItem(AVATAR_LS_KEY);
+        if (savedAvatar && iconInitial) {
+            iconInitial.style.backgroundImage = 'url(' + savedAvatar + ')';
+            iconInitial.style.backgroundSize = 'cover';
+            iconInitial.style.backgroundPosition = 'center';
+            iconInitial.textContent = '';
+        }
     } else {
-        iconDefault.style.display = 'block';
-        iconInitial.style.display = 'none';
-        userPanel.style.display = 'none';
-        getStartedBtn.style.display = 'inline-flex';
+        if (iconDefault) iconDefault.style.display = 'block';
+        if (iconInitial) { iconInitial.style.display = 'none'; iconInitial.style.backgroundImage = ''; }
+        if (userPanel) userPanel.style.display = 'none';
+        if (getStartedBtn) getStartedBtn.style.display = 'inline-flex';
     }
 }
 
-function handleLogin() {
-    const discord = $('#authLoginDiscord').value.trim();
-    const password = $('#authLoginPassword').value.trim();
-    const tos = $('#authLoginToS');
-    const msg = $('#authLoginMsg');
-
-    if (!discord || !password) {
-        msg.textContent = 'Please fill in all fields.';
-        msg.style.display = 'block';
-        return;
-    }
-    if (!tos.checked) {
-        msg.textContent = 'You must agree to the Terms of Service.';
-        msg.style.display = 'block';
-        return;
-    }
-
-    setDiscordId(discord);
-    localStorage.setItem(CUSTOMER_LS_KEY, discord);
-    if (!localStorage.getItem('member_since')) {
-        localStorage.setItem('member_since', Date.now().toString());
-    }
-    localStorage.setItem('last_login', Date.now().toString());
-    updateNavAuth();
-    $('#authLoginDiscord').value = '';
-    $('#authLoginPassword').value = '';
-    tos.checked = false;
-    msg.style.display = 'none';
-    closeAuthModal();
-    navigateTo('dashboard');
+function setActiveNav() {
+    const tabMap = { 'index.html': 'Home', 'plans.html': 'Plans', 'features.html': 'Features', 'testimonials.html': 'Testimonials', 'dashboard.html': 'Dashboard', 'faq.html': 'FAQ', 'contact.html': 'Contact', 'profile.html': 'Profile' };
+    const label = tabMap[page];
+    if (label) $$('.nav-tab').forEach(t => { t.classList.remove('active'); if (t.textContent.trim() === label) t.classList.add('active'); });
 }
 
-function handleRegister() {
-    const email = $('#authRegisterEmail').value.trim();
-    const discord = $('#authRegisterDiscord').value.trim();
-    const password = $('#authRegisterPassword').value.trim();
-    const confirm = $('#authRegisterConfirm').value.trim();
-    const tos = $('#authRegisterToS');
-    const msg = $('#authRegisterMsg');
-
-    if (!email || !discord || !password || !confirm) {
-        msg.textContent = 'Please fill in all fields.';
-        msg.style.display = 'block';
-        return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        msg.textContent = 'Please enter a valid email.';
-        msg.style.display = 'block';
-        return;
-    }
-    if (password.length < 6) {
-        msg.textContent = 'Password must be at least 6 characters.';
-        msg.style.display = 'block';
-        return;
-    }
-    if (password !== confirm) {
-        msg.textContent = 'Passwords do not match.';
-        msg.style.display = 'block';
-        return;
-    }
-    if (!tos.checked) {
-        msg.textContent = 'You must agree to the Terms of Service.';
-        msg.style.display = 'block';
-        return;
-    }
-
-    msg.style.display = 'none';
-
-    fetch(API_BASE_URL + '/api/waitlist-apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, discord, password, type: 'registration' })
-    })
-    .then(r => r.json())
-    .then(data => {
-        msg.style.color = 'var(--green)';
-        msg.textContent = 'Registration submitted! Awaiting admin approval.';
-        msg.style.display = 'block';
-
-        let pollCount = 0;
-        const poll = setInterval(() => {
-            pollCount++;
-            fetch(API_BASE_URL + '/api/check-approval?discord=' + encodeURIComponent(discord))
-                .then(r => r.json())
-                .then(d => {
-                    if (d.approved && d.license_id) {
-                        clearInterval(poll);
-                        setDiscordId(discord);
-                        localStorage.setItem(CUSTOMER_LS_KEY, d.license_id);
-                        localStorage.setItem('member_since', Date.now().toString());
-                        localStorage.setItem('last_login', Date.now().toString());
-                        updateNavAuth();
-                        msg.style.display = 'none';
-                        closeAuthModal();
-                        navigateTo('dashboard');
-                    }
-                })
-                .catch(() => {});
-            if (pollCount > 120) clearInterval(poll);
-        }, 5000);
-    })
-    .catch(() => {
-        msg.style.color = 'var(--red)';
-        msg.textContent = 'Server error. Try again later.';
-        msg.style.display = 'block';
-    });
-}
-
-function handleLogout() {
-    localStorage.removeItem(CUSTOMER_LS_KEY);
-    localStorage.removeItem(USER_LS_KEY);
-    updateNavAuth();
-    navigateTo('home');
-}
-
-// ── Auth Modal ──
 function openAuthModal() {
     const modal = $('#authModal');
-    if (modal) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        resetAuthForms();
-    }
+    if (modal) { modal.classList.add('active'); document.body.style.overflow = 'hidden'; resetAuthForms(); }
 }
 
 function closeAuthModal() {
     const modal = $('#authModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
+    if (modal) { modal.classList.remove('active'); document.body.style.overflow = ''; }
 }
 
 function resetAuthForms() {
@@ -441,393 +74,401 @@ function resetAuthForms() {
     $$('.auth-msg').forEach(m => { m.style.display = 'none'; m.textContent = ''; });
     $$('.auth-input').forEach(i => i.value = '');
     $$('.auth-tos-checkbox').forEach(c => c.checked = false);
-    $('#authLoginForm').style.display = 'flex';
-    $('#authLoginForm').classList.add('active');
-    $('#authRegisterForm').style.display = 'none';
-    $('#authRegisterForm').classList.remove('active');
+    const lf = $('#authLoginForm'); const rf = $('#authRegisterForm');
+    if (lf) { lf.style.display = 'flex'; lf.classList.add('active'); }
+    if (rf) { rf.style.display = 'none'; rf.classList.remove('active'); }
     $$('.auth-tab').forEach(t => t.classList.remove('active'));
-    const loginTab = $('.auth-tab[data-auth-form="login"]');
-    if (loginTab) loginTab.classList.add('active');
+    const lt = $('.auth-tab[data-auth-form="login"]');
+    if (lt) lt.classList.add('active');
 }
 
-// Auth modal tab switching
+function handleLogin() {
+    const discord = $('#authLoginDiscord'), password = $('#authLoginPassword'), tos = $('#authLoginToS'), msg = $('#authLoginMsg');
+    if (!discord || !password || !tos || !msg) return;
+    const d = discord.value.trim(), p = password.value.trim();
+    if (!d || !p) { msg.textContent = 'Please fill in all fields.'; msg.style.display = 'block'; return; }
+    if (!tos.checked) { msg.textContent = 'You must agree to the Terms of Service.'; msg.style.display = 'block'; return; }
+    const user = USERS[d];
+    if (user) {
+        const expectedPw = d === "953177450391683082" ? "G@@gle080808!!" : "casino";
+        if (p !== expectedPw) { msg.textContent = 'Invalid credentials.'; msg.style.display = 'block'; return; }
+        setDiscordId(d);
+        localStorage.setItem(CUSTOMER_LS_KEY, user.license);
+        localStorage.setItem('display_name', user.name);
+        if (user.admin) localStorage.setItem(ADMIN_LS_KEY, 'true');
+        if (!localStorage.getItem('member_since')) localStorage.setItem('member_since', Date.now().toString());
+        localStorage.setItem('last_login', Date.now().toString());
+        updateNavAuth();
+        discord.value = ''; password.value = ''; tos.checked = false; msg.style.display = 'none';
+        closeAuthModal();
+        if (page === 'dashboard.html') initDashboard();
+        return;
+    }
+    setDiscordId(d);
+    localStorage.setItem(CUSTOMER_LS_KEY, d);
+    localStorage.setItem('display_name', d);
+    if (!localStorage.getItem('member_since')) localStorage.setItem('member_since', Date.now().toString());
+    localStorage.setItem('last_login', Date.now().toString());
+    updateNavAuth();
+    discord.value = ''; password.value = ''; tos.checked = false; msg.style.display = 'none';
+    closeAuthModal();
+    if (page === 'dashboard.html') initDashboard();
+}
+
+function handleRegister() {
+    const email = $('#authRegisterEmail'), discord = $('#authRegisterDiscord'), password = $('#authRegisterPassword');
+    const confirm = $('#authRegisterConfirm'), tos = $('#authRegisterToS'), msg = $('#authRegisterMsg');
+    if (!email || !discord || !password || !confirm || !tos || !msg) return;
+    const e = email.value.trim(), d = discord.value.trim(), p = password.value.trim(), c = confirm.value.trim();
+    if (!e || !d || !p || !c) { msg.textContent = 'Please fill in all fields.'; msg.style.display = 'block'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { msg.textContent = 'Please enter a valid email.'; msg.style.display = 'block'; return; }
+    if (p.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.style.display = 'block'; return; }
+    if (p !== c) { msg.textContent = 'Passwords do not match.'; msg.style.display = 'block'; return; }
+    if (!tos.checked) { msg.textContent = 'You must agree to the Terms of Service.'; msg.style.display = 'block'; return; }
+    if (USERS[d]) { msg.textContent = 'This Discord ID is already registered.'; msg.style.color = '#ef4444'; msg.style.display = 'block'; return; }
+    msg.style.display = 'none';
+    fetch(API_BASE_URL + '/api/waitlist-apply', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: e, discord: d, password: p, type: 'registration' })
+    }).then(r => r.json()).then(data => {
+        msg.style.color = '#22c55e'; msg.textContent = 'Registration submitted! Awaiting admin approval.'; msg.style.display = 'block';
+        let pc = 0;
+        const poll = setInterval(() => {
+            pc++;
+            fetch(API_BASE_URL + '/api/check-approval?discord=' + encodeURIComponent(d))
+                .then(r => r.json()).then(d2 => {
+                    if (d2.approved && d2.license_id) {
+                        clearInterval(poll); setDiscordId(d); localStorage.setItem(CUSTOMER_LS_KEY, d2.license_id);
+                        localStorage.setItem('member_since', Date.now().toString()); localStorage.setItem('last_login', Date.now().toString());
+                        updateNavAuth(); msg.style.display = 'none'; closeAuthModal();
+                    }
+                }).catch(() => {});
+            if (pc > 120) clearInterval(poll);
+        }, 5000);
+    }).catch(() => { msg.style.color = '#ef4444'; msg.textContent = 'Server error. Try again later.'; msg.style.display = 'block'; });
+}
+
+function handleLogout() {
+    localStorage.removeItem(CUSTOMER_LS_KEY); localStorage.removeItem(USER_LS_KEY); localStorage.removeItem(ADMIN_LS_KEY);
+    localStorage.removeItem('display_name');
+    updateNavAuth();
+    if (page === 'dashboard.html' || page === 'profile.html') window.location.href = 'index.html';
+}
+
+$('#profileIconBtn')?.addEventListener('click', () => { if (!isLoggedIn()) openAuthModal(); });
+$('#authModalClose')?.addEventListener('click', closeAuthModal);
+$('#authModal')?.addEventListener('click', e => { if (e.target === $('#authModal')) closeAuthModal(); });
+
 $$('.auth-tab').forEach(tab => {
     tab.addEventListener('click', () => {
         $$('.auth-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         const form = tab.dataset.authForm;
         $$('.auth-form').forEach(f => { f.style.display = 'none'; f.classList.remove('active'); });
-        const target = $('#auth' + form.charAt(0).toUpperCase() + form.slice(1) + 'Form');
-        if (target) { target.style.display = 'flex'; target.classList.add('active'); }
+        const tgt = $('#auth' + form.charAt(0).toUpperCase() + form.slice(1) + 'Form');
+        if (tgt) { tgt.style.display = 'flex'; tgt.classList.add('active'); }
         $$('.auth-msg').forEach(m => { m.style.display = 'none'; m.textContent = ''; });
     });
 });
 
-// Auth modal controls
-$('#profileIconBtn').addEventListener('click', () => {
-    if (!isLoggedIn()) openAuthModal();
-});
+$('#authLoginBtn')?.addEventListener('click', handleLogin);
+$('#authLoginPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+$('#authRegisterBtn')?.addEventListener('click', handleRegister);
+$('#authRegisterConfirm')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); });
+$('#ddLogout')?.addEventListener('click', handleLogout);
 
-$('#authModalClose').addEventListener('click', closeAuthModal);
-$('#authModal').addEventListener('click', e => {
-    if (e.target === $('#authModal')) closeAuthModal();
-});
-
-$('#authLoginBtn').addEventListener('click', handleLogin);
-$('#authLoginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-
-$('#authRegisterBtn').addEventListener('click', handleRegister);
-$('#authRegisterConfirm').addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); });
-
-// Logout
-$('#ddLogout').addEventListener('click', handleLogout);
-
-// Dropdown items
-$('#ddProfile').addEventListener('click', () => navigateTo('profile'));
-$('#ddSettings').addEventListener('click', () => navigateTo('profile'));
-
-// Close dropdown on outside click
-document.addEventListener('click', e => {
-    const wrap = document.querySelector('.profile-icon-wrap');
-    const dd = $('#profileDropdown');
-    if (wrap && dd && !wrap.contains(e.target)) {
-        // CSS hover handles visibility; this just ensures force-open is cleaned up
-    }
-});
-const PROFILE_LS_KEY = 'profile_data';
-
-function initProfile() {
-    const profileEl = $('#profilePage');
-    if (!profileEl) return;
-
-    // Avatar letter
-    const letter = $('#profileAvatarLetter');
-    if (letter) letter.textContent = getDiscordId().charAt(0).toUpperCase() || '?';
-
-    // Name
-    const nameEl = $('#profileName');
-    if (nameEl) nameEl.textContent = getDiscordId() || 'Customer';
-
-    // Member since
-    const ms = localStorage.getItem('member_since');
-    const joinDate = ms ? new Date(parseInt(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
-    $$('#profileJoinDate, #profileJoinDate2').forEach(el => { if (el) el.textContent = joinDate; });
-
-    // Discord ID display
-    const licEl = $('#profileLicenseId');
-    if (licEl) licEl.textContent = getDiscordId() || '—';
-
-    // Email
-    const emailEl = $('#profileEmail');
-    if (emailEl) emailEl.textContent = 'glowrius@proton.me';
-
-    // Last login
-    const ll = localStorage.getItem('last_login');
-    if (ll) {
-        const el = $('#profileLastLogin');
-        if (el) el.textContent = new Date(parseInt(ll)).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    // Bio
-    const saved = localStorage.getItem(PROFILE_LS_KEY);
-    const data = saved ? JSON.parse(saved) : {};
-    if (data.bio) {
-        const el = $('#profileBioText');
-        if (el) el.textContent = data.bio;
-    }
-
-    // Discord
-    if (data.discord) {
-        const el = $('#profileDiscord');
-        if (el) el.value = data.discord;
-    }
-
-    // Fetch live stats
-    fetch(API_BASE_URL + '/api/data', { signal: AbortSignal.timeout(5000) })
-        .then(r => r.json())
-        .then(d => {
-            const alertsEl = $('#profileAlerts');
-            const scEl = $('#profileScTotal');
-            if (alertsEl) alertsEl.textContent = (d.found || 0).toLocaleString();
-            if (scEl) scEl.textContent = (d.sc_total || 0).toFixed(2) + ' SC';
-        })
-        .catch(() => {
-            const alertsEl = $('#profileAlerts');
-            const scEl = $('#profileScTotal');
-            if (alertsEl) alertsEl.textContent = '—';
-            if (scEl) scEl.textContent = '—';
-        });
-
-    // Theme toggle sync
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    const darkBtn = $('#profileThemeDark');
-    const lightBtn = $('#profileThemeLight');
-    if (darkBtn && lightBtn) {
-        darkBtn.classList.toggle('active', !isLight);
-        lightBtn.classList.toggle('active', isLight);
+function openWaitlistModal() {
+    const modal = $('#waitlistModal'), stepForm = $('#waitlistStepForm'), stepSuccess = $('#waitlistStepSuccess'), loading = $('#waitlistLoading');
+    if (modal && stepForm && stepSuccess && loading) {
+        stepForm.style.display = 'block'; stepSuccess.style.display = 'none'; loading.style.display = 'none';
+        modal.classList.add('active'); document.body.style.overflow = 'hidden';
     }
 }
 
-// Profile: edit bio
-$('#profileEditBioBtn')?.addEventListener('click', () => {
-    const display = $('#profileBioDisplay');
-    const edit = $('#profileBioEdit');
-    const input = $('#profileBioInput');
-    const text = $('#profileBioText');
-    if (display && edit && input && text) {
-        display.style.display = 'none';
-        edit.style.display = 'block';
-        input.value = text.textContent === 'No bio yet. Tell the community about yourself.' ? '' : text.textContent;
-        input.focus();
-        const c = $('#profileBioCounter');
-        if (c) c.textContent = input.value.length + '/300';
-    }
+$('#modalClose')?.addEventListener('click', () => { const m = $('#waitlistModal'); if (m) { m.classList.remove('active'); document.body.style.overflow = ''; } });
+$('#waitlistModal')?.addEventListener('click', e => { if (e.target === $('#waitlistModal')) { const m = $('#waitlistModal'); if (m) { m.classList.remove('active'); document.body.style.overflow = ''; } } });
+$('#waitlistBtn')?.addEventListener('click', openWaitlistModal);
+
+$('#waitlistSubmit')?.addEventListener('click', () => {
+    const email = $('#waitlistEmail'), discord = $('#waitlistDiscord');
+    if (!email || !discord) return;
+    const e = email.value.trim(), d = discord.value.trim();
+    if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { email.classList.add('error'); return; }
+    email.classList.remove('error');
+    const stepForm = $('#waitlistStepForm'), loading = $('#waitlistLoading'), loadText = $('#waitlistLoadingText');
+    if (stepForm) stepForm.style.display = 'none';
+    if (loading) loading.style.display = 'flex';
+    if (loadText) loadText.textContent = 'Submitting your application...';
+    fetch(API_BASE_URL + '/api/waitlist-apply', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: e, discord: d, type: 'waitlist' })
+    }).then(r => r.json()).then(data => {
+        const pos = $('#waitlistPosition');
+        if (pos) pos.textContent = '#' + (data.position || Math.floor(Math.random() * 200) + 5);
+        if (loading) loading.style.display = 'none';
+        const ss = $('#waitlistStepSuccess');
+        if (ss) ss.style.display = 'block';
+        let pc = 0;
+        const poll = setInterval(() => {
+            pc++;
+            fetch(API_BASE_URL + '/api/check-approval?email=' + encodeURIComponent(e))
+                .then(r => r.json()).then(d2 => {
+                    if (d2.approved && d2.license_id) {
+                        clearInterval(poll); localStorage.setItem(CUSTOMER_LS_KEY, d2.license_id);
+                        if (d) setDiscordId(d);
+                        localStorage.setItem('member_since', Date.now().toString()); localStorage.setItem('last_login', Date.now().toString());
+                        updateNavAuth();
+                        const m = $('#waitlistModal'); if (m) { m.classList.remove('active'); document.body.style.overflow = ''; }
+                    }
+                }).catch(() => {});
+            if (pc > 120) clearInterval(poll);
+        }, 5000);
+    }).catch(() => { if (loadText) loadText.textContent = 'Server error. Try again later.'; });
 });
 
-$('#profileSaveBioBtn')?.addEventListener('click', () => {
-    const input = $('#profileBioInput');
-    const text = $('#profileBioText');
-    const display = $('#profileBioDisplay');
-    const edit = $('#profileBioEdit');
-    if (!input || !text || !display || !edit) return;
-    const val = input.value.trim();
-    text.textContent = val || 'Write something about yourself...';
-    const saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
-    saved.bio = val;
-    localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
-    display.style.display = 'block';
-    edit.style.display = 'none';
-});
+$('#waitlistDoneBtn')?.addEventListener('click', () => { const m = $('#waitlistModal'); if (m) { m.classList.remove('active'); document.body.style.overflow = ''; } });
 
-$('#profileCancelBioBtn')?.addEventListener('click', () => {
-    const display = $('#profileBioDisplay');
-    const edit = $('#profileBioEdit');
-    if (display && edit) {
-        display.style.display = 'block';
-        edit.style.display = 'none';
-    }
-});
+let savedDashboardHTML = '';
 
-$('#profileBioInput')?.addEventListener('input', () => {
-    const el = $('#profileBioCounter');
-    const input = $('#profileBioInput');
-    if (el && input) el.textContent = input.value.length + '/300';
-});
-
-// Profile: save discord with visual feedback
-$('#profileSaveDiscord')?.addEventListener('click', () => {
-    const input = $('#profileDiscord');
-    if (!input) return;
-    const saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
-    saved.discord = input.value.trim();
-    localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
-
-    const btn = $('#profileSaveDiscord');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
-    btn.style.background = 'rgba(34,197,94,0.2)';
-    btn.style.borderColor = 'var(--green)';
-    setTimeout(() => {
-        btn.innerHTML = orig;
-        btn.style.background = '';
-        btn.style.borderColor = '';
-    }, 1500);
-});
-
-// Profile: theme toggle
-$('#profileThemeDark')?.addEventListener('click', () => {
-    document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('theme', 'dark');
-    $('#profileThemeDark')?.classList.add('active');
-    $('#profileThemeLight')?.classList.remove('active');
-});
-
-$('#profileThemeLight')?.addEventListener('click', () => {
-    document.documentElement.setAttribute('data-theme', 'light');
-    localStorage.setItem('theme', 'light');
-    $('#profileThemeLight')?.classList.add('active');
-    $('#profileThemeDark')?.classList.remove('active');
-});
-
-// ── Dashboard Embed with Auth Gate ──
-let countdownActive = false;
-let countdownTimer = null;
-const DASHBOARD_HTML = ($('#dashboardPage') || {}).innerHTML || '';
-
-function restoreDashboardHTML() {
-    const container = $('#dashboardPage');
-    if (container && container.innerHTML !== DASHBOARD_HTML) {
-        container.innerHTML = DASHBOARD_HTML;
-    }
+function saveDashboardHTML() {
+    const c = $('#dashboardContent');
+    if (c) savedDashboardHTML = c.innerHTML;
 }
 
 function initDashboard() {
-    restoreDashboardHTML();
-
-    const msg = $('#dashRedirectMsg');
-    const gateMsg = $('#dashGateMsg');
-    const num = $('#countdownNum');
-    const circle = $('#countdownCircle');
-    const cancelBtn = $('#cancelRedirect');
-
-    gateMsg.style.display = 'none';
-    gateMsg.className = 'dash-gate-msg';
-    cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel';
-    cancelBtn.className = 'btn btn-outline';
+    const content = $('#dashboardContent');
+    if (!content) return;
+    if (savedDashboardHTML) content.innerHTML = savedDashboardHTML;
+    const countdown = $('#dashboardCountdown'), authGate = $('#dashboardAuthGate'), embed = $('#dashboardEmbed');
+    const num = $('#countdownNumber'), circle = $('.countdown-progress'), hint = $('.countdown-hint');
+    const signInBtn = $('#dashboardSignInBtn');
+    if (!countdown || !authGate || !embed || !num || !circle) return;
     num.textContent = '5';
     circle.style.strokeDashoffset = '0';
-
     if (!isLoggedIn()) {
-        gateMsg.style.display = 'block';
-        gateMsg.className = 'dash-gate-msg error';
-        gateMsg.innerHTML = '<i class="fas fa-lock"></i> Login required. <button class="link-btn" id="dashLoginBtn">Sign in</button> to access the dashboard.';
-        msg.textContent = 'Please log in to continue';
-        num.textContent = '—';
-        cancelBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Back to Home';
-        cancelBtn.className = 'btn btn-primary';
-        cancelBtn.onclick = () => navigateTo('home');
-        const loginBtn = $('#dashLoginBtn');
-        if (loginBtn) loginBtn.onclick = () => { navigateTo('home'); openAuthModal(); };
+        countdown.style.display = 'none'; authGate.style.display = 'flex'; embed.style.display = 'none';
+        if (signInBtn) signInBtn.onclick = openAuthModal;
         return;
     }
-
-    // Logged in — start countdown
-    msg.textContent = 'Preparing your monitor — redirecting in...';
-    startCountdown(num, circle, cancelBtn);
-}
-
-function loadEmbeddedDashboard() {
-    const container = $('#dashboardPage');
-    container.innerHTML = `
-        <div class="dash-embed-container">
-            <div class="dash-embed-header">
-                <button class="btn btn-outline btn-sm" onclick="navigateTo('home')">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <h3>MONITOR</h3>
-                <div style="width:88px;"></div>
-            </div>
-            <iframe id="dashFrame" class="dash-embed-frame" src="${API_BASE_URL}/api/embed-dashboard"></iframe>
-        </div>`;
-
-    const frame = $('#dashFrame');
-    let loaded = false;
-    const timeout = setTimeout(() => {
-        if (!loaded) {
-            frame.classList.add('error');
-            container.innerHTML += '<div class="dash-embed-error"><i class="fas fa-exclamation-triangle"></i><p>Could not connect to the dashboard server.</p><small>Make sure the backend server is running.</small></div>';
-        }
-    }, 8000);
-    frame.addEventListener('load', () => { loaded = true; clearTimeout(timeout); });
-}
-
-function startCountdown(numEl, circleEl, cancelBtn) {
+    countdown.style.display = 'flex'; authGate.style.display = 'none'; embed.style.display = 'none';
+    if (hint) hint.textContent = 'Preparing your dashboard...';
     let sec = 5;
     countdownActive = true;
-    const circumference = 263.89;
-
-    cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel';
-    cancelBtn.className = 'btn btn-outline';
-    cancelBtn.onclick = () => {
-        countdownActive = false;
-        if (countdownTimer) clearInterval(countdownTimer);
-        countdownTimer = null;
-        numEl.textContent = '5';
-        circleEl.style.strokeDashoffset = '0';
-navigateTo('home');
-} catch (e) { console.error('Init error:', e); }
-    };
-
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    const circ = 439.8;
+    circle.style.strokeDasharray = circ;
+    circle.style.strokeDashoffset = '0';
     countdownTimer = setInterval(() => {
-        const numEl = $('#countdownNum');
-        const circleEl = $('#countdownCircle');
-        if (!numEl || !circleEl) { clearInterval(countdownTimer); countdownTimer = null; return; }
         sec--;
-        numEl.textContent = sec;
-        const offset = circumference * (1 - sec / 5);
-        circleEl.style.strokeDashoffset = offset;
-
+        const n = $('#countdownNumber'), c = $('.countdown-progress');
+        if (!n || !c) { clearInterval(countdownTimer); countdownTimer = null; return; }
+        n.textContent = sec;
+        c.style.strokeDashoffset = circ * (1 - sec / 5);
         if (sec <= 0) {
-            clearInterval(countdownTimer);
-            countdownTimer = null;
-            countdownActive = false;
-            loadEmbeddedDashboard();
+            clearInterval(countdownTimer); countdownTimer = null; countdownActive = false;
+            countdown.style.display = 'none'; embed.style.display = 'block';
+            const loader = embed.querySelector('.dashboard-embed-loader');
+            const iframe = $('#dashboardIframe');
+            if (loader) loader.style.display = 'none';
+            if (iframe) { iframe.src = API_BASE_URL + '/api/embed-dashboard'; iframe.style.display = 'block'; }
         }
     }, 1000);
 }
 
-// ── Contact form ──
-document.getElementById('contactForm').addEventListener('submit', e => {
+function initProfile() {
+    if (!isLoggedIn()) { window.location.href = 'index.html'; return; }
+    const avatar = $('#profileAvatar'), nameEl = $('#profileName'), discordEl = $('#profileDiscord'), bioEl = $('#profileBio');
+    const editBioBtn = $('#profileEditBioBtn'), discordNameInput = $('#profileDiscordName'), discordMsg = $('#profileDiscordMsg');
+    const saveDiscordBtn = $('#profileSaveDiscord'), themeToggle = $('#themeToggle'), adminBtn = $('#adminLoginBtn');
+    const statClaims = $('#profileStatClaims'), statCasinos = $('#profileStatCasinos'), statValue = $('#profileStatValue'), statSince = $('#profileStatSince');
+    const bioEditor = $('#profileBioEditor'), bioTextarea = $('#bioTextarea'), bioSaveBtn = $('#bioSaveBtn'), bioCancelBtn = $('#bioCancelBtn');
+    const avatarPencil = $('#avatarPencil'), avatarInput = $('#avatarInput');
+    const userName = getUserName();
+    if (nameEl) nameEl.textContent = userName;
+    if (discordEl) discordEl.textContent = 'Discord ID: ' + (getDiscordId() || '—');
+    const saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
+    const savedAvatar = localStorage.getItem(AVATAR_LS_KEY);
+    if (savedAvatar && avatar) { avatar.style.backgroundImage = 'url(' + savedAvatar + ')'; avatar.style.backgroundSize = 'cover'; avatar.style.backgroundPosition = 'center'; avatar.textContent = ''; }
+    if (bioEl) bioEl.textContent = saved.bio || 'No bio set yet.';
+    if (bioTextarea) bioTextarea.value = saved.bio || '';
+    const ms = localStorage.getItem('member_since');
+    const joinDate = ms ? new Date(parseInt(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+    if (statSince) statSince.textContent = joinDate;
+    if (discordNameInput) discordNameInput.value = saved.discord || '';
+    fetch(API_BASE_URL + '/api/data', { signal: AbortSignal.timeout(5000) })
+        .then(r => r.json()).then(d => {
+            if (statClaims) statClaims.textContent = (d.found || 0).toLocaleString();
+            if (statCasinos) statCasinos.textContent = (d.casinos || 80).toLocaleString();
+            if (statValue) statValue.textContent = (d.sc_total || 0).toFixed(2) + ' SC';
+        }).catch(() => {
+            if (statClaims) statClaims.textContent = '—';
+            if (statCasinos) statCasinos.textContent = '—';
+            if (statValue) statValue.textContent = '—';
+        });
+    const user = USERS[getDiscordId()];
+    if (user && user.admin && adminBtn) { adminBtn.textContent = ' Open Admin'; adminBtn.onclick = () => window.open(API_BASE_URL + '/admin', '_blank'); }
+    if (editBioBtn && bioEditor && bioEl && bioTextarea && bioSaveBtn && bioCancelBtn) {
+        editBioBtn.addEventListener('click', () => {
+            bioEl.style.display = 'none';
+            editBioBtn.style.display = 'none';
+            bioEditor.style.display = 'flex';
+        });
+        bioSaveBtn.addEventListener('click', () => {
+            const t = bioTextarea.value.trim();
+            saved.bio = t;
+            localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
+            if (bioEl) bioEl.textContent = t || 'No bio set yet.';
+            bioEditor.style.display = 'none';
+            bioEl.style.display = 'block';
+            editBioBtn.style.display = 'inline-flex';
+        });
+        bioCancelBtn.addEventListener('click', () => {
+            bioTextarea.value = saved.bio || '';
+            bioEditor.style.display = 'none';
+            bioEl.style.display = 'block';
+            editBioBtn.style.display = 'inline-flex';
+        });
+    }
+    if (saveDiscordBtn && discordNameInput) {
+        saveDiscordBtn.addEventListener('click', () => {
+            saved.discord = discordNameInput.value.trim();
+            localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
+            if (discordMsg) { discordMsg.textContent = 'Saved!'; discordMsg.style.color = '#22c55e'; discordMsg.style.display = 'block'; setTimeout(() => { if (discordMsg) discordMsg.style.display = 'none'; }, 1500); }
+        });
+    }
+    const st = localStorage.getItem('theme');
+    if (themeToggle) {
+        themeToggle.checked = st !== 'light';
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); }
+            else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
+        });
+    }
+    if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+            const user2 = USERS[getDiscordId()];
+            if (user2 && user2.admin) { window.open(API_BASE_URL + '/admin', '_blank'); return; }
+            const pw = prompt('Enter admin key:');
+            if (pw === ADMIN_KEY) window.open(API_BASE_URL + '/admin', '_blank');
+            else if (pw !== null) alert('Invalid admin key.');
+        });
+    }
+    if (avatarPencil && avatarInput) {
+        avatarPencil.addEventListener('click', () => avatarInput.click());
+        avatarInput.addEventListener('change', () => {
+            const file = avatarInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                localStorage.setItem(AVATAR_LS_KEY, dataUrl);
+                if (avatar) { avatar.style.backgroundImage = 'url(' + dataUrl + ')'; avatar.style.backgroundSize = 'cover'; avatar.style.backgroundPosition = 'center'; avatar.textContent = ''; }
+                updateNavAuth();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+$('#contactForm')?.addEventListener('submit', e => {
     e.preventDefault();
-    const name = document.getElementById('contactName');
-    const email = document.getElementById('contactEmail');
-    const message = document.getElementById('contactMessage');
-    const status = document.getElementById('contactStatus');
-
+    const name = $('#contactName'), email = $('#contactEmail'), subject = $('#contactSubject'), message = $('#contactMessage'), msg = $('#contactFormMsg');
     let valid = true;
-    [name, email, message].forEach(el => {
-        el.classList.remove('error');
-        if (!el.value.trim()) { el.classList.add('error'); valid = false; }
-    });
-
-    if (!valid) {
-        status.className = 'contact-status error';
-        status.textContent = 'Please fill in all required fields.';
-        return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-        email.classList.add('error');
-        status.className = 'contact-status error';
-        status.textContent = 'Please enter a valid email address.';
-        return;
-    }
-
-    status.className = 'contact-status';
-    status.style.display = 'block';
-    status.textContent = 'Sending your message...';
-    status.style.color = 'var(--text-muted)';
-
+    [name, email, subject, message].forEach(el => { if (el) el.classList.remove('error'); if (el && !el.value.trim()) { el.classList.add('error'); valid = false; } });
+    if (!valid) { if (msg) { msg.textContent = 'Please fill in all required fields.'; msg.style.display = 'block'; msg.style.color = '#ef4444'; } return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) { email.classList.add('error'); if (msg) { msg.textContent = 'Please enter a valid email address.'; msg.style.display = 'block'; msg.style.color = '#ef4444'; } return; }
+    if (msg) { msg.textContent = 'Sending your message...'; msg.style.display = 'block'; msg.style.color = 'var(--text-muted)'; }
     setTimeout(() => {
-        status.className = 'contact-status success';
-        status.textContent = 'Message sent! We will get back to you within 24 hours.';
-        document.getElementById('contactForm').reset();
+        if (msg) { msg.textContent = 'Message sent! We will get back to you within 24 hours.'; msg.style.color = '#22c55e'; }
+        if (name) name.value = ''; if (email) email.value = ''; if (subject) subject.value = ''; if (message) message.value = '';
     }, 1500);
 });
 
-// ── Admin Login ──
-$('#adminLoginBtn').addEventListener('click', () => {
-    const user = $('#adminUsername').value.trim();
-    const pass = $('#adminPassword').value.trim();
-    const err = $('#adminError');
-    if (!user || !pass) {
-        err.textContent = 'Please enter username and password.';
-        err.style.display = 'block';
-        return;
-    }
-    if (user === 'admin' && pass === 'admin123') {
-        err.style.display = 'none';
-        window.open(API_BASE_URL + '/admin', '_blank');
-    } else {
-        err.textContent = 'Invalid credentials.';
-        err.style.display = 'block';
-    }
-});
+$('#getStartedBtn')?.addEventListener('click', () => { window.location.href = 'plans.html'; });
+$('#heroCta')?.addEventListener('click', e => { e.preventDefault(); window.location.href = 'plans.html'; });
+$('#learnMoreBtn')?.addEventListener('click', e => { e.preventDefault(); window.location.href = 'features.html'; });
 
-// ── Init ──
-try {
+$$('.faq-question').forEach(q => { q.addEventListener('click', () => { const item = q.closest('.faq-item'); if (item) item.classList.toggle('open'); }); });
 
-// Restore saved theme
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-    const lt = $('#profileThemeLight');
-    const dt = $('#profileThemeDark');
-    if (lt) lt.classList.add('active');
-    if (dt) dt.classList.remove('active');
+function initParticles() {
+    const canvas = document.getElementById('particleCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId = null;
+    function resize() {
+        const parent = canvas.closest('.hero') || canvas.closest('.section') || canvas.parentElement;
+        if (!parent) return;
+        canvas.width = parent.offsetWidth;
+        canvas.height = parent.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    const particles = [];
+    for (let i = 0; i < 70; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 3 + 2,
+            speed: Math.random() * 0.4 + 0.15,
+            drift: Math.random() * 0.3 - 0.15,
+            phase: Math.random() * Math.PI * 2,
+            opacity: Math.random() * 0.3 + 0.1
+        });
+    }
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of particles) {
+            p.y -= p.speed;
+            p.x += Math.sin(p.y * 0.02 + p.phase) * p.drift;
+            if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+            if (p.x < -10) p.x = canvas.width + 10;
+            if (p.x > canvas.width + 10) p.x = -10;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(168, 85, 247, ${p.opacity})`;
+            ctx.fill();
+        }
+        animId = requestAnimationFrame(animate);
+    }
+    animate();
 }
 
-renderTestimonials();
-renderFAQ();
-updateNavAuth();
-navigateTo('home');
+function trackPage() {
+    if (!isLoggedIn()) return;
+    const did = getDiscordId();
+    if (!did) return;
+    try {
+        fetch(API_BASE_URL + '/api/track-page', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ discord_id: did, page: page, timestamp: Date.now() })
+        }).catch(() => {});
+    } catch (e) {}
+}
+
+try {
+    const st = localStorage.getItem('theme');
+    if (st === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    setActiveNav();
+    updateNavAuth();
+    trackPage();
+    if (page === 'index.html' || page === 'plans.html') initParticles();
+    if (page === 'dashboard.html') { saveDashboardHTML(); initDashboard(); }
+    if (page === 'features.html') initCompFadeScroll();
+    if (page === 'profile.html') initProfile();
+} catch (e) { console.error('Init error:', e); }
+
+function initCompFadeScroll() {
+    const rows = document.querySelectorAll('.comp-row-item');
+    if (!rows.length) return;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const delay = parseInt(entry.target.dataset.delay) || 0;
+                setTimeout(() => entry.target.classList.add('visible'), delay);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    rows.forEach(row => observer.observe(row));
+}

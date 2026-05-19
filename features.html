@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweepstakes Monitor — Free SC & Spins Alerts</title>
+    <title>Features — Sweepstakes Monitor</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -18,9 +18,9 @@
             <span>Sweepstakes Monitor</span>
         </a>
         <div class="nav-links" id="navTabs">
-            <a href="index.html" class="nav-tab active">Home</a>
+            <a href="index.html" class="nav-tab">Home</a>
             <a href="plans.html" class="nav-tab">Plans</a>
-            <a href="features.html" class="nav-tab">Features</a>
+            <a href="features.html" class="nav-tab active">Features</a>
             <a href="testimonials.html" class="nav-tab">Testimonials</a>
             <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
             <a href="faq.html" class="nav-tab">FAQ</a>
@@ -45,80 +45,100 @@
         </div>
 </nav>
 
-<!-- HOME -->
-<section class="hero">
-    <div class="hero-glow"></div>
-    <canvas id="particleCanvas"></canvas>
-    <div class="container hero-inner">
-        <span class="hero-badge pulse-badge">
-            <span class="live-dot"></span> Live & Monitoring
-        </span>
-        <h1>Sweepstakes <span class="accent-text">Monitor</span></h1>
-        <p class="hero-subtitle">Elite mod & staff alert system — real-time signals, zero noise</p>
-        <p class="hero-desc">Get instant Discord alerts the moment sweepstakes are posted. Track free SC, free spins, and exclusive offers from 80+ casinos.</p>
-        <div class="hero-stats">
-            <div class="hero-stat">
-                <span class="hero-stat-val">80+</span>
-                <span class="hero-stat-lbl">Casinos Monitored</span>
-            </div>
-            <div class="hero-stat">
-                <span class="hero-stat-val">3</span>
-                <span class="hero-stat-lbl">Tiers (S/A/B)</span>
-            </div>
-            <div class="hero-stat">
-                <span class="hero-stat-val">&lt;15s</span>
-                <span class="hero-stat-lbl">Alert Speed</span>
-            </div>
-        </div>
-        <div class="hero-actions">
-            <button class="btn btn-primary btn-lg" id="heroCta">View Plans</button>
-            <button class="btn btn-outline btn-lg" id="learnMoreBtn">See Features</button>
-        </div>
-        <div class="hero-tiers">
-            <span class="tier-badge tier-s">S Tier</span>
-            <span class="tier-badge tier-a">A Tier</span>
-            <span class="tier-badge tier-b">B Tier</span>
-        </div>
-    </div>
-</section>
-
-<!-- Supported Sites -->
-<section class="supported-section">
+<!-- FEATURES -->
+<section class="section" id="features">
     <div class="container">
         <div class="section-header">
-            <h2>Supported Casinos</h2>
-            <p>Our software monitors and auto-claims from these leading social casinos.</p>
+            <h2>Everything You Need</h2>
+            <p>Monitor 80+ social casinos across three carefully curated tiers.</p>
         </div>
-        <div class="supported-grid">
-            <div class="supported-item">
-                <div class="supported-icon cc">
-                    <img src="https://imgs.search.brave.com/oksgFgc2DYwkAvPAFR329NuJv52bDE-ygj6lF1vZn9Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/d3NuLmNvbS9maWx0/ZXJzOmZvcm1hdCh3/ZWJwKS9maWx0ZXJz/OmZvcm1hdCh3ZWJw/KS9maXQtaW4vMzAw/eDMwMC8xNzA5NjQz/NzA0L2Nyb3duY29p/bnMucG5n" alt="Crown Coins">
-                </div>
-                <span class="supported-name">Crown Coins</span>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-tachometer-alt"></i></div>
+                <h3>Real-Time Dashboard</h3>
+                <p>Live view of all active sweepstakes, free SC offers, and daily bonuses across supported casinos.</p>
             </div>
-            <div class="supported-item">
-                <div class="supported-icon rp">
-                    <img src="https://imgs.search.brave.com/nLDhnHTi3JpXSlCIAElFxh-h3-UZegdhFq1c9-4exL8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cy5i/ZXR0aW5nLm9uZWZv/b3RiYWxsLmNvbS93/cC1jb250ZW50L3Vw/bG9hZHMvMjAyNS8w/My9mZWF0dXJlLWlt/YWdlLXJlYWwtcHJp/emUud2VicA" alt="RealPrize">
-                </div>
-                <span class="supported-name">RealPrize</span>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <h3>Alert Speed 0.1s</h3>
+                <p>Industry-leading detection speed. We catch posts within 0.1 seconds — competitors take 15+ seconds.</p>
             </div>
-            <div class="supported-item">
-                <div class="supported-icon rb">
-                    <img src="https://imgs.search.brave.com/RU7Fbv0bpZkFVfdASKgXQruY7A5ZMyIZvwhsChJA7Jk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zaS1m/bC13cC5zMy5hbWF6/b25hd3MuY29tL3dw/LWNvbnRlbnQvdXBs/b2Fkcy8yMDI1MDgy/NjA4NDkxNC9yZWJl/dC1wcm9tby1jb2Rl/LTEud2VicA" alt="ReBet">
-                </div>
-                <span class="supported-name">ReBet</span>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                <h3>Auto-Claim Bot</h3>
+                <p>Fully automated claiming for free SC, daily login bonuses, and streamer drops. Set it and forget it.</p>
             </div>
-            <div class="supported-item">
-                <div class="supported-icon st">
-                    <img src="https://imgs.search.brave.com/1coPpRkB3yf04WJVOTGgSibjk7Yezc561jup-W_SmfQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS53ZWJvcGVkaWEu/Y29tL2ltYWdlcy9s/b2dvcy8xNzYxNDY3/NDE4ODY1XzY4ZmRk/YzFhN2ExZGI5ZjMz/ODYyYzkzOS5zdmc" alt="Stake">
-                </div>
-                <span class="supported-name">Stake</span>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fab fa-discord"></i></div>
+                <h3>Discord Alerts</h3>
+                <p>Instant notifications delivered straight to your Discord server. Never miss a drop again.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>Success Stats</h3>
+                <p>Track your claim history, success rates, and total value claimed with detailed analytics.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>Private & Secure</h3>
+                <p>Your casino credentials are stored encrypted. No logs. No tracking. Complete privacy.</p>
             </div>
         </div>
-        <div class="supported-more">
-            <span class="supported-more-line"></span>
-            <span class="supported-more-text">&amp; many more</span>
-            <span class="supported-more-line"></span>
+
+        <!-- Comparison Rows -->
+        <div class="comp-section">
+            <h2 class="section-header">Sweepstakes Monitor vs Competitors</h2>
+            <div class="comp-rows">
+                <div class="comp-row-item" data-delay="0">
+                    <div class="comp-label">Alert Speed</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> 0.1s</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> 15+ seconds</div>
+                    </div>
+                </div>
+                <div class="comp-row-item" data-delay="100">
+                    <div class="comp-label">Casinos Monitored</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> 80+</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> 20-40</div>
+                    </div>
+                </div>
+                <div class="comp-row-item" data-delay="200">
+                    <div class="comp-label">Free SC Tracking</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> Full coverage</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> Limited</div>
+                    </div>
+                </div>
+                <div class="comp-row-item" data-delay="300">
+                    <div class="comp-label">Auto-Claim Bot</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> Included</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> Extra charge</div>
+                    </div>
+                </div>
+                <div class="comp-row-item" data-delay="400">
+                    <div class="comp-label">Stream Drops</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> All platforms</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> Kick only</div>
+                    </div>
+                </div>
+                <div class="comp-row-item" data-delay="500">
+                    <div class="comp-label">Daily Bonus Auto-Claim</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> Full automation</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> Manual only</div>
+                    </div>
+                </div>
+                <div class="comp-row-item" data-delay="600">
+                    <div class="comp-label">Discord Integration</div>
+                    <div class="comp-values">
+                        <div class="comp-val our"><i class="fas fa-check-circle"></i> Real-time</div>
+                        <div class="comp-val theirs"><i class="fas fa-times-circle"></i> Delayed</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
