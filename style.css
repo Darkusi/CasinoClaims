@@ -906,35 +906,8 @@ body {
     margin-bottom: 16px;
 }
 
-.plan-price-wrap {
-    margin-bottom: 24px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border);
-}
-
-.plan-price-original {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.plan-price-original s { color: #555; }
-
-.plan-price-badge {
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 100px;
-    background: rgba(168,85,247,0.1);
-    color: var(--primary);
-    font-weight: 600;
-}
-
 .plan-price {
-    font-size: 2.8rem;
+    font-size: 3.2rem;
     font-weight: 900;
     line-height: 1.1;
     margin-bottom: 6px;
@@ -947,6 +920,9 @@ body {
 .plan-price-sub {
     font-size: 0.85rem;
     color: var(--text-muted);
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
 }
 
 .plan-features {
@@ -980,6 +956,24 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.plan-waitlist-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: rgba(168,85,247,0.06);
+    border: 1px solid rgba(168,85,247,0.1);
+}
+
+.plan-waitlist-msg i {
+    color: var(--primary);
+    font-size: 0.9rem;
 }
 
 .plan-card .btn { width: 100%; }
