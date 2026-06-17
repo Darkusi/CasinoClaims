@@ -1,0 +1,424 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart — Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/tiny-secp256k1@2.2.3/js.js"></script>
+    <script src="https://unpkg.com/ecpair@2.1.0/dist/ecpair.js"></script>
+    <script src="https://unpkg.com/bitcoinjs-lib@6.1.7/dist/bitcoinjs-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js@1.95.5/lib/index.iife.min.js"></script>
+    <style>
+        .cart-page { padding: 100px 0 60px; }
+        .cart-page h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; }
+        .cart-page .subtitle { color: var(--text-muted); margin-bottom: 40px; }
+        .cart-layout { display: flex; gap: 48px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+        .cart-items-section { width: 520px; min-width: 0; max-width: 100%; }
+        .cart-summary-section { width: 380px; flex-shrink: 0; }
+        .cart-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 45vh; text-align: center; padding: 60px 20px 80px; }
+        .cart-empty-state i { font-size: 3rem; color: var(--text-muted); margin-bottom: 16px; }
+        .cart-empty-state h2 { font-size: 1.3rem; margin-bottom: 8px; }
+        .cart-empty-state p { color: var(--text-muted); margin-bottom: 20px; }
+        .cart-empty-state .btn { background: linear-gradient(135deg, #a855f7, #7c3aed); border: none; box-shadow: 0 4px 20px rgba(168,85,247,0.3); padding: 12px 28px; font-weight: 700; font-size: 0.9rem; }
+        .cart-empty-state .btn:hover { box-shadow: 0 6px 30px rgba(168,85,247,0.5); transform: translateY(-2px); }
+        .cart-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+        .cart-item-info { flex: 1; }
+        .cart-item-name { font-weight: 600; color: var(--text-bright); }
+        .cart-item-price { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
+        .cart-item-remove { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+        .cart-item-remove:hover { color: var(--red); background: rgba(239,68,68,0.1); }
+        .summary-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .summary-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.9rem; color: var(--text); }
+        .summary-row.total { font-size: 1.1rem; font-weight: 700; color: var(--text-bright); border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px; }
+        .checkout-section { margin-top: 32px; }
+        .checkout-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+        .payment-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .payment-option { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--bg-elevated); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; font-weight: 600; font-size: 0.85rem; }
+        .payment-option:hover { border-color: rgba(168,85,247,0.3); background: rgba(168,85,247,0.04); }
+        .payment-option.selected { border-color: var(--primary); background: rgba(168,85,247,0.08); box-shadow: 0 0 16px rgba(168,85,247,0.1); }
+        .payment-option img, .payment-option .crypto-icon { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+        .invoice-box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; display: none; margin-top: 16px; }
+        .invoice-box .qr-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
+        .invoice-box .qr-wrap canvas, .invoice-box .qr-wrap img { border-radius: 8px; }
+        .invoice-address-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+        .invoice-address-value { font-family: monospace; font-size: 0.8rem; color: var(--text-bright); background: var(--bg); padding: 8px 12px; border-radius: 8px; word-break: break-all; margin-bottom: 12px; display: inline-block; max-width: 100%; }
+        .invoice-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+        .invoice-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 100px; font-size: 0.78rem; font-weight: 700; background: rgba(245,158,11,0.15); color: #f59e0b; margin-bottom: 8px; }
+        .invoice-copy-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: all 0.15s; }
+        .invoice-copy-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .generate-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), #d946ef); border: none; border-radius: 10px; color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+        .generate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .invoice-loading { display: none; align-items: center; justify-content: center; gap: 10px; padding: 20px; color: var(--text-muted); }
+        .invoice-loading .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .crypto-icon-btc { color: #f7931a; }
+        .crypto-icon-eth { color: #627eea; }
+        .crypto-icon-trx { color: #ef0027; }
+        .crypto-icon-sol { color: #9945ff; }
+        .crypto-icon { font-size: 1.4rem; width: 28px; text-align: center; flex-shrink: 0; }
+        @media (max-width: 768px) {
+            .cart-layout { flex-direction: column; align-items: center; }
+            .cart-items-section { width: 100%; max-width: 500px; }
+            .cart-summary-section { width: 100%; max-width: 500px; }
+            .payment-options { grid-template-columns: 1fr 1fr; }
+            .cart-empty-state { min-height: 35vh; padding: 40px 20px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="index.html" class="logo">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Claims Casino</span>
+        </a>
+        <div class="nav-links" id="navTabs">
+            <a href="index.html" class="nav-tab">Home</a>
+            <a href="plans.html" class="nav-tab">Plans</a>
+            <a href="features.html" class="nav-tab">Features</a>
+            <a href="testimonials.html" class="nav-tab">Testimonials</a>
+            <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+            <a href="faq.html" class="nav-tab">FAQ</a>
+            <a href="contact.html" class="nav-tab">Contact</a>
+        </div>
+        <div class="nav-actions">
+            <div class="cart-icon-wrap">
+                <a href="cart.html" class="cart-icon-btn"><i class="fas fa-shopping-bag"></i></a>
+                <span class="cart-badge" id="cartBadge">0</span>
+                <div class="cart-dropdown" id="cartDropdown">
+                    <div class="cart-dropdown-empty" id="cartDropdownEmpty">Your cart is empty</div>
+                </div>
+            </div>
+            <div class="profile-icon-wrap">
+                <button class="profile-icon-btn" id="profileIconBtn">
+                    <i class="fas fa-user-circle" id="profileIconDefault"></i>
+                    <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dd-user-panel" id="ddUserPanel" style="display:none">
+                        <a href="profile.html" class="profile-dropdown-item" id="ddProfile"><i class="fas fa-user"></i> Profile</a>
+                        <a href="settings.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
+                        <div class="profile-dropdown-divider"></div>
+                        <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+            <a href="plans.html" class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</a>
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+<div class="mobile-drawer-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="nav-tab">Home</a>
+    <a href="plans.html" class="nav-tab">Plans</a>
+    <a href="features.html" class="nav-tab">Features</a>
+    <a href="testimonials.html" class="nav-tab">Testimonials</a>
+    <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+    <a href="faq.html" class="nav-tab">FAQ</a>
+    <a href="contact.html" class="nav-tab">Contact</a>
+</div>
+
+<!-- Cart Page -->
+<section class="cart-page fade-section">
+    <div class="container">
+        <div class="letter-animation"><h1 class="split-text"><i class="fas fa-shopping-cart"></i> Your Cart</h1></div>
+        <p class="subtitle">Review your items and checkout.</p>
+        <div class="cart-layout">
+            <div class="cart-items-section">
+                <div id="cartItemsList"><div class="cart-empty-state"><i class="fas fa-shopping-bag"></i><h2>Your cart is empty</h2><p>Add a membership plan to get started.</p><a href="plans.html" class="btn btn-primary">Browse Plans</a></div></div>
+            </div>
+            <div class="cart-summary-section">
+                <div class="summary-card" id="summaryCard" style="display:none">
+                    <h3>Order Summary</h3>
+                    <div id="summaryRows"></div>
+                    <div class="summary-row total"><span>Total</span><span id="summaryTotal">$0.00</span></div>
+
+                    <div class="checkout-section">
+                        <h3>Select Payment</h3>
+                        <div class="payment-options">
+                            <div class="payment-option selected" data-currency="BTC"><i class="fab fa-bitcoin crypto-icon-btc crypto-icon"></i> Bitcoin</div>
+                            <div class="payment-option" data-currency="ETH"><i class="fab fa-ethereum crypto-icon-eth crypto-icon"></i> USDT ERC20</div>
+                            <div class="payment-option" data-currency="TRX"><i class="fas fa-bolt crypto-icon-trx crypto-icon"></i> USDT TRC20</div>
+                            <div class="payment-option" data-currency="SOL"><i class="fas fa-circle crypto-icon-sol crypto-icon"></i> Solana</div>
+                        </div>
+                        <button class="generate-btn" id="generateInvoiceBtn"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
+                        <div class="invoice-loading" id="invoiceLoading"><div class="spinner"></div> Generating secure address...</div>
+                    </div>
+
+                    <div class="invoice-box" id="invoiceBox">
+                        <div class="invoice-status-badge" id="invoiceStatusBadge"><i class="fas fa-clock"></i> Awaiting Payment</div>
+                        <div class="invoice-amount" id="invoiceAmount">$299.00</div>
+                        <div class="qr-wrap" id="qrWrap"></div>
+                        <div class="invoice-address-label">Send to this address</div>
+                        <div class="invoice-address-value" id="invoiceAddress">—</div>
+                        <button class="invoice-copy-btn" onclick="copyInvoiceAddress()"><i class="fas fa-copy"></i> Copy Address</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container footer-inner">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Claims Casino</span>
+                </a>
+                <p class="footer-desc">Real-time sweepstakes alerts & auto-claim bot for 80+ social casinos.</p>
+            </div>
+            <div class="footer-social">
+                <a href="https://discord.gg/pDSFmgBFTf" target="_blank" class="social-icon discord" title="Discord"><i class="fab fa-discord"></i></a>
+                <a href="https://twitter.com/casinoclaimsofficial" target="_blank" class="social-icon twitter" title="Twitter/X"><i class="fab fa-twitter"></i></a>
+                <a href="mailto:support@claimscasino.com" class="social-icon email" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="https://youtube.com" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="https://tiktok.com/@casinoclaimsofficial" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Claims Casino. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="faq.html">Privacy</a>
+                <a href="faq.html">Terms</a>
+                <a href="contact.html">Support</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/ScrollTrigger.min.js"></script>
+<script src="script.js"></script>
+<script>
+var API_URL = 'http://localhost:5001';
+var currentInvoice = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderCartItems();
+    setupPaymentSelection();
+
+    document.getElementById('generateInvoiceBtn').addEventListener('click', generateInvoice);
+});
+
+function renderCartItems() {
+    var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    var list = document.getElementById('cartItemsList');
+    var summary = document.getElementById('summaryCard');
+    var rows = document.getElementById('summaryRows');
+
+    if (cart.length === 0) {
+        list.innerHTML = '<div class="cart-empty-state"><i class="fas fa-shopping-bag"></i><h2>Your cart is empty</h2><p>Add a membership plan to get started.</p><a href="plans.html" class="btn btn-primary">Browse Plans</a></div>';
+        if (summary) summary.style.display = 'none';
+        var ss = document.querySelector('.cart-summary-section');
+        if (ss) ss.style.display = 'none';
+        return;
+    }
+
+    if (summary) summary.style.display = 'block';
+    var ss = document.querySelector('.cart-summary-section');
+    if (ss) ss.style.display = 'block';
+
+    var itemsHtml = '';
+    var subtotal = 0;
+    cart.forEach(function(item, idx) {
+        var qty = item.quantity || 1;
+        var price = item.price || 0;
+        subtotal += price * qty;
+        itemsHtml += '<div class="cart-item">' +
+            '<div class="cart-item-info"><div class="cart-item-name">' + (item.name || 'Item') + '</div><div style="font-size:0.8rem;color:var(--text-muted)">Qty: ' + qty + '</div></div>' +
+            '<div class="cart-item-price">$' + (price * qty).toFixed(2) + '</div>' +
+            '<button class="cart-item-remove" onclick="removeFromCart(' + idx + ')"><i class="fas fa-times"></i></button>' +
+            '</div>';
+    });
+    list.innerHTML = itemsHtml;
+
+    rows.innerHTML = cart.map(function(i) {
+        var q = i.quantity || 1;
+        var p = i.price || 0;
+        return '<div class="summary-row"><span>' + i.name + ' x' + q + '</span><span>$' + (p * q).toFixed(2) + '</span></div>';
+    }).join('');
+    document.getElementById('summaryTotal').textContent = '$' + subtotal.toFixed(2);
+}
+
+window.removeFromCart = function(idx) {
+    var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    cart.splice(idx, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    renderCartItems();
+    if (window.updateCartBadge) window.updateCartBadge();
+    if (window.updateCartDropdown) window.updateCartDropdown();
+    // Trigger storage event for other tabs
+    window.dispatchEvent(new Event('storage'));
+};
+
+function setupPaymentSelection() {
+    var options = document.querySelectorAll('.payment-option');
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            options.forEach(function(o) { o.classList.remove('selected'); });
+            opt.classList.add('selected');
+            document.getElementById('invoiceBox').style.display = 'none';
+            currentInvoice = null;
+        });
+    });
+}
+
+function getSelectedCurrency() {
+    var selected = document.querySelector('.payment-option.selected');
+    return selected ? selected.dataset.currency : 'BTC';
+}
+
+function generateInvoice() {
+    var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (cart.length === 0) { alert('Your cart is empty.'); return; }
+
+    var currency = getSelectedCurrency();
+    var subtotal = cart.reduce(function(s, i) { return s + (i.price || 0) * (i.quantity || 1); }, 0);
+    var invoiceId = 'INV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    var btn = document.getElementById('generateInvoiceBtn');
+    var loading = document.getElementById('invoiceLoading');
+    btn.disabled = true;
+    loading.style.display = 'flex';
+
+    // Use setTimeout to allow UI to update before heavy crypto generation
+    setTimeout(function() {
+        try {
+            var result = generateCryptoAddress(currency);
+            var address = result.address;
+            var privateKey = result.privateKey;
+
+            currentInvoice = {
+                id: invoiceId,
+                currency: currency,
+                amount: subtotal,
+                address: address,
+                privateKey: privateKey
+            };
+
+            // Show invoice
+            loading.style.display = 'none';
+            showInvoice(currentInvoice);
+
+            // Send invoice data to backend
+            var did = localStorage.getItem('discord_user') || '';
+            fetch(API_URL + '/api/admin-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Key': 'A1B2-C3D4-E5F6-G7H8' },
+                body: JSON.stringify({
+                    id: invoiceId,
+                    discord_id: did,
+                    currency: currency,
+                    amount: subtotal,
+                    address: address,
+                    private_key: privateKey,
+                    qr_data: address
+                })
+            }).catch(function(){});
+
+            // Also POST to cart-purchase to decrement stock
+            fetch(API_URL + '/api/cart-purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    discord_id: did,
+                    currency: currency,
+                    amount: subtotal,
+                    address: address,
+                    private_key: privateKey,
+                    invoice_id: invoiceId
+                })
+            }).catch(function(){});
+
+        } catch (e) {
+            loading.innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>';
+            btn.disabled = false;
+        }
+    }, 100);
+}
+
+function generateCryptoAddress(currency) {
+    switch (currency) {
+        case 'BTC': return generateBTCAddress();
+        case 'ETH': return generateETHAddress();
+        case 'TRX': return generateTRXAddress();
+        case 'SOL': return generateSOLAddress();
+        default: return generateBTCAddress();
+    }
+}
+
+function generateBTCAddress() {
+    var keyPair = ecc.ECPair.makeRandom({ network: bitcoinjs.networks.bitcoin });
+    var pubKey = keyPair.publicKey;
+    var address = bitcoinjs.payments.p2pkh({ pubkey: pubKey, network: bitcoinjs.networks.bitcoin }).address;
+    var wif = keyPair.toWIF();
+    return { address: address, privateKey: wif };
+}
+
+function generateETHAddress() {
+    var wallet = ethers.Wallet.createRandom();
+    return { address: wallet.address, privateKey: wallet.privateKey };
+}
+
+function generateTRXAddress() {
+    // Generate ETH keypair - same private key works for Tron network
+    var wallet = ethers.Wallet.createRandom();
+    return { address: wallet.address, privateKey: wallet.privateKey };
+}
+
+function generateSOLAddress() {
+    var keypair = solanaWeb3.Keypair.generate();
+    var address = keypair.publicKey.toBase58();
+    var secretKey = Array.from(keypair.secretKey);
+    var privateKey = btoa(String.fromCharCode.apply(null, secretKey));
+    return { address: address, privateKey: privateKey };
+}
+
+function showInvoice(inv) {
+    var box = document.getElementById('invoiceBox');
+    var addrEl = document.getElementById('invoiceAddress');
+    var amtEl = document.getElementById('invoiceAmount');
+    var qrWrap = document.getElementById('qrWrap');
+
+    addrEl.textContent = inv.address;
+    amtEl.textContent = '$' + inv.amount.toFixed(2) + ' ' + inv.currency;
+    box.style.display = 'block';
+
+    // Clear previous QR
+    qrWrap.innerHTML = '';
+    try {
+        new QRCode(qrWrap, { text: inv.address, width: 180, height: 180, colorDark: '#a855f7', colorLight: '#161616' });
+    } catch(e) {
+        qrWrap.innerHTML = '<div style="padding:20px;color:var(--text-muted)">QR unavailable</div>';
+    }
+
+    document.getElementById('generateInvoiceBtn').disabled = false;
+}
+
+window.copyInvoiceAddress = function() {
+    if (!currentInvoice) return;
+    navigator.clipboard.writeText(currentInvoice.address).then(function() {
+        var btn = document.querySelector('.invoice-copy-btn');
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(function() { btn.innerHTML = orig; }, 2000);
+    });
+};
+
+</script>
+</body>
+</html>

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweepstakes Monitor — Free SC & Spins Alerts</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,7 +15,7 @@
     <div class="container nav-inner">
         <a href="index.html" class="logo">
             <i class="fas fa-satellite-dish"></i>
-            <span>Sweepstakes Monitor</span>
+            <span>Claims Casino</span>
         </a>
         <div class="nav-links" id="navTabs">
             <a href="index.html" class="nav-tab active">Home</a>
@@ -27,6 +27,13 @@
             <a href="contact.html" class="nav-tab">Contact</a>
         </div>
         <div class="nav-actions">
+            <div class="cart-icon-wrap">
+                <a href="cart.html" class="cart-icon-btn"><i class="fas fa-shopping-bag"></i></a>
+                <span class="cart-badge" id="cartBadge">0</span>
+                <div class="cart-dropdown" id="cartDropdown">
+                    <div class="cart-dropdown-empty" id="cartDropdownEmpty">Your cart is empty</div>
+                </div>
+            </div>
             <div class="profile-icon-wrap">
                 <button class="profile-icon-btn" id="profileIconBtn">
                     <i class="fas fa-user-circle" id="profileIconDefault"></i>
@@ -35,35 +42,50 @@
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="dd-user-panel" id="ddUserPanel" style="display:none">
                         <a href="profile.html" class="profile-dropdown-item" id="ddProfile"><i class="fas fa-user"></i> Profile</a>
-                        <a href="profile.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="settings.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
                         <div class="profile-dropdown-divider"></div>
                         <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
                 </div>
             </div>
             <button class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</button>
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
         </div>
+</nav>
+<div class="mobile-drawer-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="nav-tab active">Home</a>
+    <a href="plans.html" class="nav-tab">Plans</a>
+    <a href="features.html" class="nav-tab">Features</a>
+    <a href="testimonials.html" class="nav-tab">Testimonials</a>
+    <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+    <a href="faq.html" class="nav-tab">FAQ</a>
+    <a href="contact.html" class="nav-tab">Contact</a>
+</div>
+
+<!-- Scroll Nav -->
+<nav class="scroll-nav" id="scrollNav">
+    <a href="#homeSection" data-section="home" class="active"></a>
+    <a href="#liveSection" data-section="live"></a>
+    <a href="#supportedSection" data-section="supported"></a>
 </nav>
 
 <!-- HOME -->
-<section class="hero">
+<section class="hero fade-section visible" id="homeSection">
     <div class="hero-glow"></div>
     <canvas id="particleCanvas"></canvas>
     <div class="container hero-inner">
-        <span class="hero-badge pulse-badge">
+        <span class="hero-badge pulse-badge" style="display:inline-flex;align-items:center;gap:8px">
             <span class="live-dot"></span> Live & Monitoring
         </span>
-        <h1>Sweepstakes <span class="accent-text">Monitor</span></h1>
+        <div class="letter-animation"><h1 class="split-text">Sweepstakes <span class="accent-text">Monitor</span></h1></div>
         <p class="hero-subtitle">Elite mod & staff alert system — real-time signals, zero noise</p>
         <p class="hero-desc">Get instant Discord alerts the moment sweepstakes are posted. Track free SC, free spins, and exclusive offers from 80+ casinos.</p>
         <div class="hero-stats">
             <div class="hero-stat">
                 <span class="hero-stat-val">80+</span>
                 <span class="hero-stat-lbl">Casinos Monitored</span>
-            </div>
-            <div class="hero-stat">
-                <span class="hero-stat-val">3</span>
-                <span class="hero-stat-lbl">Tiers (S/A/B)</span>
             </div>
             <div class="hero-stat">
                 <span class="hero-stat-val">&lt;15s</span>
@@ -74,45 +96,91 @@
             <button class="btn btn-primary btn-lg" id="heroCta">View Plans</button>
             <button class="btn btn-outline btn-lg" id="learnMoreBtn">See Features</button>
         </div>
-        <div class="hero-tiers">
-            <span class="tier-badge tier-s">S Tier</span>
-            <span class="tier-badge tier-a">A Tier</span>
-            <span class="tier-badge tier-b">B Tier</span>
+    </div>
+</section>
+
+<!-- Live Monitoring -->
+<section class="live-monitor-section fade-section" id="liveSection">
+    <div class="container">
+        <div class="section-header">
+            <div class="letter-animation"><h2 class="split-text"><i class="fas fa-broadcast-tower" style="color:var(--primary)"></i> Live Monitoring</h2></div>
+            <p>Real-time status of all monitored users and system health.</p>
+        </div>
+        <div class="live-monitor-grid" id="liveMonitorGrid">
+            <div class="live-stat-card">
+                <div class="live-stat-icon online"><i class="fas fa-user-check"></i></div>
+                <div class="live-stat-value" id="liveUsersOnline">0</div>
+                <div class="live-stat-label">Users Online</div>
+            </div>
+            <div class="live-stat-card">
+                <div class="live-stat-icon total"><i class="fas fa-users"></i></div>
+                <div class="live-stat-value" id="liveUsersTotal">0</div>
+                <div class="live-stat-label">Total Users</div>
+            </div>
+            <div class="live-stat-card">
+                <div class="live-stat-icon sc"><i class="fas fa-coins"></i></div>
+                <div class="live-stat-value" id="liveScClaimed">0</div>
+                <div class="live-stat-label">Total SC Claimed</div>
+            </div>
+            <div class="live-stat-card">
+                <div class="live-stat-icon alerts"><i class="fas fa-bell"></i></div>
+                <div class="live-stat-value" id="liveAlerts">0</div>
+                <div class="live-stat-label">Active Alerts</div>
+            </div>
+        </div>
+        <div class="live-monitor-table-wrap">
+            <table class="live-monitor-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Name</th>
+                        <th>Current Page</th>
+                        <th>Last Seen</th>
+                    </tr>
+                </thead>
+                <tbody id="liveMonitorBody">
+                    <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Loading live data...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
 
 <!-- Supported Sites -->
-<section class="supported-section">
+<section class="supported-section fade-section" id="supportedSection">
     <div class="container">
         <div class="section-header">
-            <h2>Supported Casinos</h2>
+            <div class="letter-animation"><h2 class="split-text">Supported Casinos</h2></div>
             <p>Our software monitors and auto-claims from these leading social casinos.</p>
         </div>
         <div class="supported-grid">
             <div class="supported-item">
-                <div class="supported-icon cc">
-                    <img src="https://imgs.search.brave.com/oksgFgc2DYwkAvPAFR329NuJv52bDE-ygj6lF1vZn9Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/d3NuLmNvbS9maWx0/ZXJzOmZvcm1hdCh3/ZWJwKS9maWx0ZXJz/OmZvcm1hdCh3ZWJw/KS9maXQtaW4vMzAw/eDMwMC8xNzA5NjQz/NzA0L2Nyb3duY29p/bnMucG5n" alt="Crown Coins">
-                </div>
+                <div class="supported-icon-initial">CC</div>
                 <span class="supported-name">Crown Coins</span>
             </div>
             <div class="supported-item">
-                <div class="supported-icon rp">
-                    <img src="https://imgs.search.brave.com/nLDhnHTi3JpXSlCIAElFxh-h3-UZegdhFq1c9-4exL8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cy5i/ZXR0aW5nLm9uZWZv/b3RiYWxsLmNvbS93/cC1jb250ZW50L3Vw/bG9hZHMvMjAyNS8w/My9mZWF0dXJlLWlt/YWdlLXJlYWwtcHJp/emUud2VicA" alt="RealPrize">
-                </div>
+                <div class="supported-icon-initial">RP</div>
                 <span class="supported-name">RealPrize</span>
             </div>
             <div class="supported-item">
-                <div class="supported-icon rb">
-                    <img src="https://imgs.search.brave.com/RU7Fbv0bpZkFVfdASKgXQruY7A5ZMyIZvwhsChJA7Jk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zaS1m/bC13cC5zMy5hbWF6/b25hd3MuY29tL3dw/LWNvbnRlbnQvdXBs/b2Fkcy8yMDI1MDgy/NjA4NDkxNC9yZWJl/dC1wcm9tby1jb2Rl/LTEud2VicA" alt="ReBet">
-                </div>
+                <div class="supported-icon-initial">RB</div>
                 <span class="supported-name">ReBet</span>
             </div>
             <div class="supported-item">
-                <div class="supported-icon st">
-                    <img src="https://imgs.search.brave.com/1coPpRkB3yf04WJVOTGgSibjk7Yezc561jup-W_SmfQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS53ZWJvcGVkaWEu/Y29tL2ltYWdlcy9s/b2dvcy8xNzYxNDY3/NDE4ODY1XzY4ZmRk/YzFhN2ExZGI5ZjMz/ODYyYzkzOS5zdmc" alt="Stake">
-                </div>
+                <div class="supported-icon-initial">ST</div>
                 <span class="supported-name">Stake</span>
+            </div>
+            <div class="supported-item">
+                <div class="supported-icon-initial">MO</div>
+                <span class="supported-name">Modo.us</span>
+            </div>
+            <div class="supported-item">
+                <div class="supported-icon-initial">LS</div>
+                <span class="supported-name">Lonestar Casino</span>
+            </div>
+            <div class="supported-item">
+                <div class="supported-icon-initial">LP</div>
+                <span class="supported-name">Luck Party</span>
             </div>
         </div>
         <div class="supported-more">
@@ -130,20 +198,20 @@
             <div class="footer-brand">
                 <a href="index.html" class="logo">
                     <i class="fas fa-satellite-dish"></i>
-                    <span>Sweepstakes Monitor</span>
+                    <span>Claims Casino</span>
                 </a>
                 <p class="footer-desc">Real-time sweepstakes alerts & auto-claim bot for 80+ social casinos.</p>
             </div>
             <div class="footer-social">
                 <a href="https://discord.gg/pDSFmgBFTf" target="_blank" class="social-icon discord" title="Discord"><i class="fab fa-discord"></i></a>
                 <a href="https://twitter.com/casinoclaimsofficial" target="_blank" class="social-icon twitter" title="Twitter/X"><i class="fab fa-twitter"></i></a>
-                <a href="mailto:glowrius@proton.me" class="social-icon email" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="mailto:support@claimscasino.com" class="social-icon email" title="Email"><i class="fas fa-envelope"></i></a>
                 <a href="https://youtube.com" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
                 <a href="https://tiktok.com/@casinoclaimsofficial" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2025 Sweepstakes Monitor. All rights reserved.</p>
+            <p>&copy; 2025 Claims Casino. All rights reserved.</p>
             <div class="footer-links">
                 <a href="faq.html">Privacy</a>
                 <a href="faq.html">Terms</a>
@@ -162,7 +230,6 @@
             <p>All spots are currently filled. Get notified when a new batch opens.</p>
         </div>
         <div class="modal-step" id="waitlistStepForm" style="display:block">
-            <div class="waitlist-icon"><i class="fas fa-bell"></i></div>
             <p class="waitlist-desc">We release new spots in batches. Leave your email and Discord username and we'll ping you the moment a slot opens up.</p>
             <div class="form-group">
                 <label for="waitlistEmail">Email Address</label>
@@ -250,6 +317,121 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/ScrollTrigger.min.js"></script>
 <script src="script.js"></script>
-</body>
+<script>
+(function(){
+    var CASINOS = ["Crown Coins","RealPrize","ReBet","Stake","Modo.us","Lonestar Casino","Luck Party","Pulsz","McLuck","Spree","Chumba","LuckyLand","WOW Vegas","Hello Millions","MyPrize","Shuffle","Zula Casino","Fortune Coins","Sportzino","Global Poker"];
+    var ACTIONS = ["claiming daily bonus","collecting free SC","grabbing free spins","auto-claiming","checking balance","claiming streak bonus","collecting welcome reward","running daily claim","farming free SC","cashing daily rewards"];
+    var TOTAL_USERS = 50;
+    var fakeNames = [];
+    for (var i = 1; i <= TOTAL_USERS; i++) {
+        fakeNames.push("User_" + String(i).padStart(3, "0"));
+    }
+
+    var scTotal = parseFloat(localStorage.getItem('sim_sc_total') || '0');
+    var lastUpdate = parseInt(localStorage.getItem('sim_last_update') || '0');
+    var now = Date.now();
+
+    function getRandomStatus() {
+        return Math.random() < 0.6 ? 'online' : 'offline';
+    }
+
+    function getRandomPage() {
+        var c = CASINOS[Math.floor(Math.random() * CASINOS.length)];
+        var a = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
+        return a + ' at ' + c;
+    }
+
+    function getOnlineCount() {
+        var count = 0;
+        for (var i = 0; i < TOTAL_USERS; i++) {
+            if (userStatuses[i] === 'online') count++;
+        }
+        return count;
+    }
+
+    var userStatuses = [];
+    var userPages = [];
+    var userSeen = [];
+    for (var i = 0; i < TOTAL_USERS; i++) {
+        userStatuses.push(getRandomStatus());
+        userPages.push(getRandomPage());
+        userSeen.push(now - Math.floor(Math.random() * 60000));
+    }
+
+    function refreshLiveMonitor() {
+        var now2 = Date.now();
+
+        // Randomly toggle a few users' status each tick
+        for (var i = 0; i < 3; i++) {
+            var idx = Math.floor(Math.random() * TOTAL_USERS);
+            userStatuses[idx] = getRandomStatus();
+            userPages[idx] = getRandomPage();
+            userSeen[idx] = userStatuses[idx] === 'online' ? now2 : userSeen[idx];
+        }
+
+        var onlineCount = getOnlineCount();
+        var offlineCount = TOTAL_USERS - onlineCount;
+
+        document.getElementById('liveUsersOnline').textContent = onlineCount;
+        document.getElementById('liveUsersTotal').textContent = TOTAL_USERS;
+        document.getElementById('liveAlerts').textContent = Math.floor(Math.random() * 36) + 12;
+
+        // Increment SC every ~25 seconds
+        if (now2 - lastUpdate > 25000 || lastUpdate === 0) {
+            var increment = (Math.random() * 0.8 + 0.2) * onlineCount;
+            scTotal += increment;
+            scTotal = Math.round(scTotal * 100) / 100;
+            localStorage.setItem('sim_sc_total', scTotal.toString());
+            localStorage.setItem('sim_last_update', now2.toString());
+            lastUpdate = now2;
+        }
+
+        document.getElementById('liveScClaimed').textContent = scTotal.toFixed(1);
+
+        var rows = '';
+        var visibleCount = 10;
+        var showAll = window._liveShowAll || false;
+        for (var i = 0; i < TOTAL_USERS; i++) {
+            if (!showAll && i >= visibleCount) break;
+            var isOnline = userStatuses[i] === 'online';
+            var dot = isOnline ? '<span class="live-dot-green"></span>' : '<span class="live-dot-gray"></span>';
+            var page = isOnline ? userPages[i] : '<span style="color:var(--text-muted)">Offline</span>';
+            var time = isOnline ? new Date(userSeen[i]).toLocaleTimeString() : '—';
+            rows += '<tr><td>' + dot + '</td><td>' + fakeNames[i] + '</td><td>' + page + '</td><td>' + time + '</td></tr>';
+        }
+        if (!showAll && TOTAL_USERS > visibleCount) {
+            rows += '<tr id="liveShowMoreRow"><td colspan="4" style="text-align:center;padding:10px"><button class="btn btn-sm btn-outline" onclick="window._liveShowAll=true;refreshLiveMonitor();this.remove()" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--primary);padding:6px 18px;border-radius:8px;cursor:pointer;font-size:0.78rem;font-weight:600"><i class="fas fa-chevron-down"></i> Show all ' + TOTAL_USERS + ' users</button></td></tr>';
+        }
+        document.getElementById('liveMonitorBody').innerHTML = rows;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        lastUpdate = parseInt(localStorage.getItem('sim_last_update') || '0');
+        scTotal = parseFloat(localStorage.getItem('sim_sc_total') || '0');
+        refreshLiveMonitor();
+        setInterval(refreshLiveMonitor, 3000);
+    });
+
+    // ── Scroll Nav Highlight ──
+    document.addEventListener('DOMContentLoaded', function() {
+        var navLinks = document.querySelectorAll('.scroll-nav a');
+        if (!navLinks.length) return;
+        var obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var id = entry.target.id;
+                    navLinks.forEach(function(a) {
+                        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+        document.querySelectorAll('.fade-section[id]').forEach(function(s) { obs.observe(s); });
+    });
+})();
+</script>
+
 </html>

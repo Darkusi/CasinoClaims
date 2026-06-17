@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plans — Sweepstakes Monitor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Plans — Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,7 +15,7 @@
     <div class="container nav-inner">
         <a href="index.html" class="logo">
             <i class="fas fa-satellite-dish"></i>
-            <span>Sweepstakes Monitor</span>
+            <span>Claims Casino</span>
         </a>
         <div class="nav-links" id="navTabs">
             <a href="index.html" class="nav-tab">Home</a>
@@ -27,6 +27,13 @@
             <a href="contact.html" class="nav-tab">Contact</a>
         </div>
         <div class="nav-actions">
+            <div class="cart-icon-wrap">
+                <a href="cart.html" class="cart-icon-btn"><i class="fas fa-shopping-bag"></i></a>
+                <span class="cart-badge" id="cartBadge">0</span>
+                <div class="cart-dropdown" id="cartDropdown">
+                    <div class="cart-dropdown-empty" id="cartDropdownEmpty">Your cart is empty</div>
+                </div>
+            </div>
             <div class="profile-icon-wrap">
                 <button class="profile-icon-btn" id="profileIconBtn">
                     <i class="fas fa-user-circle" id="profileIconDefault"></i>
@@ -35,22 +42,34 @@
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="dd-user-panel" id="ddUserPanel" style="display:none">
                         <a href="profile.html" class="profile-dropdown-item" id="ddProfile"><i class="fas fa-user"></i> Profile</a>
-                        <a href="profile.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="settings.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
                         <div class="profile-dropdown-divider"></div>
                         <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
                 </div>
             </div>
             <button class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</button>
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
         </div>
 </nav>
+<div class="mobile-drawer-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="nav-tab">Home</a>
+    <a href="plans.html" class="nav-tab active">Plans</a>
+    <a href="features.html" class="nav-tab">Features</a>
+    <a href="testimonials.html" class="nav-tab">Testimonials</a>
+    <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+    <a href="faq.html" class="nav-tab">FAQ</a>
+    <a href="contact.html" class="nav-tab">Contact</a>
+</div>
 
 <!-- PLANS -->
-<section class="section" id="plans" style="position:relative;overflow:hidden;">
+<section class="section fade-section" id="plans" style="position:relative;overflow:hidden;">
     <canvas id="particleCanvas"></canvas>
     <div class="container">
         <div class="section-header">
-            <h2>One Plan. Monthly Subscription.</h2>
+            <div class="letter-animation"><h2 class="split-text">One Plan. Monthly Subscription.</h2></div>
             <p>Simple monthly pricing. Cancel anytime.</p>
         </div>
         <div class="plans-grid">
@@ -71,10 +90,14 @@
                     <li><i class="fas fa-check"></i> Priority when spots open</li>
                     <li><i class="fas fa-check"></i> Monthly updates & support</li>
                 </ul>
-                <div class="plan-cta">
-                    <div class="plan-waitlist-msg"><i class="fas fa-hourglass-half"></i> We're full — join the waitlist for the next batch</div>
+                <div class="plan-cta" id="planCta">
+                    <div class="plan-waitlist-msg" id="planSoldOutMsg"><i class="fas fa-hourglass-half"></i> We're full — join the waitlist for the next batch</div>
                     <button class="btn btn-primary btn-lg pulse-btn" id="waitlistBtn">Join the Waitlist</button>
-                    <div class="limited-badge"><span class="limited-dot"></span> 0 SPOTS REMAINING — NEXT BATCH TBA</div>
+                    <div class="limited-badge" id="planLimitedBadge"><span class="limited-dot"></span> 0 SPOTS REMAINING — NEXT BATCH TBA</div>
+                    <div class="plan-available" id="planAvailable" style="display:none">
+                        <div class="plan-stock-bar"><span class="stock-count" id="stockCount">0</span> spots remaining</div>
+                        <button class="btn btn-primary btn-lg" id="addToCartBtn"><i class="fas fa-shopping-cart"></i> Add to Cart — $299.00</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,20 +111,20 @@
             <div class="footer-brand">
                 <a href="index.html" class="logo">
                     <i class="fas fa-satellite-dish"></i>
-                    <span>Sweepstakes Monitor</span>
+                    <span>Claims Casino</span>
                 </a>
                 <p class="footer-desc">Real-time sweepstakes alerts & auto-claim bot for 80+ social casinos.</p>
             </div>
             <div class="footer-social">
                 <a href="https://discord.gg/pDSFmgBFTf" target="_blank" class="social-icon discord" title="Discord"><i class="fab fa-discord"></i></a>
                 <a href="https://twitter.com/casinoclaimsofficial" target="_blank" class="social-icon twitter" title="Twitter/X"><i class="fab fa-twitter"></i></a>
-                <a href="mailto:glowrius@proton.me" class="social-icon email" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="mailto:support@claimscasino.com" class="social-icon email" title="Email"><i class="fas fa-envelope"></i></a>
                 <a href="https://youtube.com" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
                 <a href="https://tiktok.com/@casinoclaimsofficial" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2025 Sweepstakes Monitor. All rights reserved.</p>
+            <p>&copy; 2025 Claims Casino. All rights reserved.</p>
             <div class="footer-links">
                 <a href="faq.html">Privacy</a>
                 <a href="faq.html">Terms</a>
@@ -120,7 +143,6 @@
             <p>All spots are currently filled. Get notified when a new batch opens.</p>
         </div>
         <div class="modal-step" id="waitlistStepForm" style="display:block">
-            <div class="waitlist-icon"><i class="fas fa-bell"></i></div>
             <p class="waitlist-desc">We release new spots in batches. Leave your email and Discord username and we'll ping you the moment a slot opens up.</p>
             <div class="form-group">
                 <label for="waitlistEmail">Email Address</label>
@@ -133,18 +155,20 @@
             <button class="btn btn-primary btn-lg" id="waitlistSubmit"><i class="fas fa-paper-plane"></i> Notify Me</button>
         </div>
         <div class="modal-step" id="waitlistStepSuccess" style="display:none">
-            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
-            <h2>You're on the List!</h2>
-            <p>We'll email you as soon as new spots open up. First come, first served.</p>
-            <div class="waitlist-position">
-                <span class="waitlist-pos-label">Your position</span>
-                <span class="waitlist-pos-num" id="waitlistPosition">#42</span>
+            <div class="success-icon" style="color:#a855f7"><i class="fas fa-check-circle"></i></div>
+            <h2>Application Submitted!</h2>
+            <p>Your application has been sent to the support team for review. You'll be notified when a spot opens up.</p>
+            <div class="waitlist-redirect-bar">
+                <div class="waitlist-redirect-track">
+                    <div class="waitlist-redirect-fill" id="redirectFill"></div>
+                </div>
+                <span class="waitlist-redirect-text" id="redirectCountdown">Redirecting in 3s...</span>
             </div>
-            <button class="btn btn-primary btn-lg" id="waitlistDoneBtn"><i class="fas fa-arrow-left"></i> Back to Site</button>
         </div>
-        <div class="modal-loading" id="waitlistLoading" style="display:none">
-            <div class="spinner"></div>
-            <p id="waitlistLoadingText">Adding you to the list...</p>
+        <div class="modal-step" id="waitlistStepSubmitting" style="display:none">
+            <div class="waitlist-submitting"><i class="fas fa-spinner fa-spin" style="font-size:2.5rem;color:#a855f7"></i></div>
+            <h2 style="margin-top:12px">Submitting...</h2>
+            <p>Please wait while we add you to the waitlist.</p>
         </div>
     </div>
 </div>
@@ -208,6 +232,107 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/ScrollTrigger.min.js"></script>
 <script src="script.js"></script>
-</body>
+<script>
+(function() {
+    var API_URL = 'http://localhost:5001';
+    var stockInterval = null;
+
+    function applyPrice() {
+        var savedPrice = localStorage.getItem('adm_price');
+        if (savedPrice) {
+            var price = parseFloat(savedPrice) || 299;
+            var priceEl = document.querySelector('.plan-price');
+            var btn = document.getElementById('addToCartBtn');
+            if (priceEl) priceEl.textContent = '$' + price.toFixed(2);
+            if (btn) btn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart — $' + price.toFixed(2);
+        }
+    }
+
+    function loadPlansStock() {
+        fetch(API_URL + '/api/stock').then(function(r){ return r.json(); }).then(function(d){
+            var count = d.count || 0;
+            var soldOutMsg = document.getElementById('planSoldOutMsg');
+            var waitlistBtn = document.getElementById('waitlistBtn');
+            var limitedBadge = document.getElementById('planLimitedBadge');
+            var available = document.getElementById('planAvailable');
+            var stockEl = document.getElementById('stockCount');
+
+            var approved = localStorage.getItem('approved_to_purchase') === 'true';
+
+            if (count > 0) {
+                if (soldOutMsg) soldOutMsg.style.display = 'none';
+                if (waitlistBtn) waitlistBtn.style.display = 'none';
+                if (limitedBadge) limitedBadge.style.display = 'none';
+                if (available) available.style.display = 'flex';
+                if (stockEl) stockEl.textContent = count;
+            } else if (approved) {
+                if (soldOutMsg) soldOutMsg.style.display = 'none';
+                if (waitlistBtn) waitlistBtn.style.display = 'none';
+                if (limitedBadge) { limitedBadge.style.display = 'flex'; limitedBadge.innerHTML = '<span class="limited-dot" style="background:#22c55e"></span> APPROVED — PURCHASE YOUR MEMBERSHIP'; }
+                if (available) available.style.display = 'flex';
+                if (stockEl) stockEl.textContent = 'Approved';
+            } else {
+                if (soldOutMsg) soldOutMsg.style.display = 'flex';
+                if (waitlistBtn) waitlistBtn.style.display = 'inline-flex';
+                if (limitedBadge) limitedBadge.style.display = 'flex';
+                if (available) available.style.display = 'none';
+            }
+        }).catch(function(){});
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPlansStock();
+        applyPrice();
+        stockInterval = setInterval(loadPlansStock, 15000);
+
+        var addBtn = document.getElementById('addToCartBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                localStorage.removeItem('approved_to_purchase');
+                var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                var exists = cart.some(function(item){ return item.id === 'elite_membership'; });
+                if (!exists) {
+                    var savedPrice = parseFloat(localStorage.getItem('adm_price')) || 299.00;
+                    cart.push({ id: 'elite_membership', name: 'Elite Access', price: savedPrice, quantity: 1 });
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    updateCartBadge();
+                    var original = addBtn.innerHTML;
+                    addBtn.innerHTML = '<i class="fas fa-check"></i> Added!';
+                    addBtn.style.background = 'rgba(34,197,94,0.2)';
+                    addBtn.style.color = '#22c55e';
+                    addBtn.style.boxShadow = 'none';
+                    setTimeout(function(){
+                        addBtn.innerHTML = original;
+                        addBtn.style.background = '';
+                        addBtn.style.color = '';
+                        addBtn.style.boxShadow = '';
+                    }, 2000);
+                } else {
+                        addBtn.innerHTML = '<i class="fas fa-check"></i> Already in Cart';
+                    setTimeout(function(){
+                        var p = parseFloat(localStorage.getItem('adm_price')) || 299.00;
+                        addBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart — $' + p.toFixed(2);
+                    }, 1500);
+                }
+            });
+        }
+    });
+
+    function updateCartBadge() {
+        var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        var badge = document.getElementById('cartBadge');
+        if (badge) {
+            var total = cart.reduce(function(sum, item){ return sum + (item.quantity || 1); }, 0);
+            badge.textContent = total;
+            badge.style.display = total > 0 ? 'flex' : 'none';
+        }
+    }
+
+    setTimeout(updateCartBadge, 100);
+})();
+</script>
+
 </html>

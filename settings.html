@@ -1,0 +1,378 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .settings-page { padding: 100px 0 60px; }
+        .settings-page h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; }
+        .settings-page .subtitle { color: var(--text-muted); margin-bottom: 32px; }
+        .settings-grid { display: flex; flex-direction: column; gap: 20px; max-width: 640px; }
+        .settings-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .settings-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .settings-card .card-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+        .settings-card .form-group { margin-bottom: 14px; }
+        .settings-card .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
+        .settings-card .form-group input, .settings-card .form-group textarea {
+            width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.88rem; transition: border-color 0.15s;
+        }
+        .settings-card .form-group input:focus, .settings-card .form-group textarea:focus { border-color: var(--primary); outline: none; }
+        .settings-card .form-group textarea { resize: vertical; min-height: 80px; }
+        .settings-card .input-row { display: flex; gap: 8px; }
+        .settings-card .input-row input { flex: 1; }
+        .settings-card .form-msg { font-size: 0.78rem; margin-top: 4px; display: none; }
+        .settings-card hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+        .settings-card .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+        .settings-card .toggle-row span { font-size: 0.88rem; }
+        .toggle-switch { width: 40px; height: 22px; background: var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .toggle-switch.active { background: var(--primary); }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left 0.2s; }
+        .toggle-switch.active::after { left: 20px; }
+        .settings-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(217,70,239,0.1)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: var(--primary); background-size: cover; background-position: center; cursor: pointer; border: 2px solid var(--border); transition: border-color 0.15s; }
+        .settings-avatar:hover { border-color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="index.html" class="logo">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Claims Casino</span>
+        </a>
+        <div class="nav-links" id="navTabs">
+            <a href="index.html" class="nav-tab">Home</a>
+            <a href="plans.html" class="nav-tab">Plans</a>
+            <a href="features.html" class="nav-tab">Features</a>
+            <a href="testimonials.html" class="nav-tab">Testimonials</a>
+            <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+            <a href="faq.html" class="nav-tab">FAQ</a>
+            <a href="contact.html" class="nav-tab">Contact</a>
+        </div>
+        <div class="nav-actions">
+            <div class="cart-icon-wrap">
+                <a href="cart.html" class="cart-icon-btn"><i class="fas fa-shopping-bag"></i></a>
+                <span class="cart-badge" id="cartBadge">0</span>
+                <div class="cart-dropdown" id="cartDropdown">
+                    <div class="cart-dropdown-empty" id="cartDropdownEmpty">Your cart is empty</div>
+                </div>
+            </div>
+            <div class="profile-icon-wrap">
+                <button class="profile-icon-btn" id="profileIconBtn">
+                    <i class="fas fa-user-circle" id="profileIconDefault"></i>
+                    <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dd-user-panel" id="ddUserPanel" style="display:none">
+                        <a href="profile.html" class="profile-dropdown-item" id="ddProfile"><i class="fas fa-user"></i> Profile</a>
+                        <a href="settings.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
+                        <div class="profile-dropdown-divider"></div>
+                        <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+            <a href="plans.html" class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</a>
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+<div class="mobile-drawer-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="nav-tab">Home</a>
+    <a href="plans.html" class="nav-tab">Plans</a>
+    <a href="features.html" class="nav-tab">Features</a>
+    <a href="testimonials.html" class="nav-tab">Testimonials</a>
+    <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+    <a href="faq.html" class="nav-tab">FAQ</a>
+    <a href="contact.html" class="nav-tab">Contact</a>
+</div>
+
+<!-- Settings Page -->
+<section class="settings-page fade-section">
+    <div class="container">
+        <div class="letter-animation"><h1 class="split-text"><i class="fas fa-cog"></i> Settings</h1></div>
+        <p class="subtitle">Manage your account preferences.</p>
+
+        <div class="settings-grid" id="settingsContent">
+            <div class="settings-card">
+                <h3><i class="fas fa-user-circle"></i> Profile</h3>
+                <p class="card-desc">Your display name, avatar, and bio.</p>
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+                    <div class="settings-avatar" id="settingsAvatar">U</div>
+                    <div>
+                        <div style="font-weight:600;color:var(--text-bright)" id="settingsName">User</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">Click avatar to change photo</div>
+                    </div>
+                </div>
+                <input type="file" id="settingsAvatarInput" accept="image/*" style="display:none">
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <div class="input-row">
+                        <input type="text" id="settingsDisplayName" maxlength="30" placeholder="Your display name">
+                        <button class="btn btn-primary btn-sm" id="settingsSaveName"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="form-msg" id="settingsNameMsg"></div>
+                </div>
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea id="settingsBio" maxlength="300" placeholder="Tell us about yourself..."></textarea>
+                    <div style="margin-top:8px"><button class="btn btn-primary btn-sm" id="settingsSaveBio"><i class="fas fa-check"></i> Save Bio</button></div>
+                    <div class="form-msg" id="settingsBioMsg"></div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-shield-alt"></i> Account</h3>
+                <p class="card-desc">Your Discord ID and login credentials.</p>
+                <div class="form-group">
+                    <label>Discord ID</label>
+                    <div class="input-row">
+                        <input type="text" id="settingsDiscordId" placeholder="Your Discord ID">
+                        <button class="btn btn-primary btn-sm" id="settingsSaveDiscord"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="form-msg" id="settingsDiscordMsg"></div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-row">
+                        <input type="password" id="settingsPassword" placeholder="New password (min 6 chars)">
+                        <button class="btn btn-primary btn-sm" id="settingsSavePassword"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="form-msg" id="settingsPwMsg"></div>
+                </div>
+                <div class="form-group">
+                    <label>Member Since</label>
+                    <input type="text" id="settingsMemberSince" disabled style="opacity:0.6">
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-bell"></i> Notifications</h3>
+                <p class="card-desc">Control your notification preferences.</p>
+                <div class="toggle-row">
+                    <span>Email Notifications</span>
+                    <div class="toggle-switch active" id="toggleEmail" data-key="notif_email"></div>
+                </div>
+                <div class="toggle-row">
+                    <span>Discord DMs</span>
+                    <div class="toggle-switch active" id="toggleDiscord" data-key="notif_discord"></div>
+                </div>
+                <div class="toggle-row">
+                    <span>Browser Push</span>
+                    <div class="toggle-switch" id="togglePush" data-key="notif_push"></div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-palette"></i> Theme</h3>
+                <p class="card-desc">Currently using dark mode (only theme available).</p>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg);border-radius:8px">
+                    <i class="fas fa-moon" style="color:var(--primary);font-size:1.1rem"></i>
+                    <span style="font-weight:500">Dark Mode (Default)</span>
+                    <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted)">Always active</span>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-shield"></i> Admin</h3>
+                <p class="card-desc">Access the admin control panel.</p>
+                <button class="btn btn-secondary" id="settingsAdminBtn"><i class="fas fa-shield-alt"></i> Open Admin Panel</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container footer-inner">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Claims Casino</span>
+                </a>
+                <p class="footer-desc">Real-time sweepstakes alerts & auto-claim bot for 80+ social casinos.</p>
+            </div>
+            <div class="footer-social">
+                <a href="https://discord.gg/pDSFmgBFTf" target="_blank" class="social-icon discord" title="Discord"><i class="fab fa-discord"></i></a>
+                <a href="https://twitter.com/casinoclaimsofficial" target="_blank" class="social-icon twitter" title="Twitter/X"><i class="fab fa-twitter"></i></a>
+                <a href="mailto:support@claimscasino.com" class="social-icon email" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="https://youtube.com" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="https://tiktok.com/@casinoclaimsofficial" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Claims Casino. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="faq.html">Privacy</a>
+                <a href="faq.html">Terms</a>
+                <a href="contact.html">Support</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/ScrollTrigger.min.js"></script>
+<script src="script.js"></script>
+<script>
+(function() {
+    var PROFILE_LS_KEY = 'profile_data';
+
+    function loadSettings() {
+        if (!localStorage.getItem('sweepstakes_user')) { window.location.href = 'index.html'; return; }
+
+        var saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
+        var nameEl = document.getElementById('settingsName');
+        var nameInput = document.getElementById('settingsDisplayName');
+        var bioEl = document.getElementById('settingsBio');
+        var discordInput = document.getElementById('settingsDiscordId');
+        var sinceEl = document.getElementById('settingsMemberSince');
+        var avatarEl = document.getElementById('settingsAvatar');
+
+        var userName = localStorage.getItem('display_name') || localStorage.getItem('discord_user') || 'User';
+        if (nameEl) nameEl.textContent = userName;
+        if (nameInput) nameInput.value = userName;
+        if (bioEl) bioEl.value = saved.bio || '';
+        if (discordInput) discordInput.value = localStorage.getItem('discord_user') || '';
+
+        var ms = localStorage.getItem('member_since');
+        if (sinceEl) sinceEl.value = ms ? new Date(parseInt(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+
+        var savedAvatar = localStorage.getItem('profile_avatar_' + (localStorage.getItem('discord_user') || ''));
+        if (savedAvatar && avatarEl) {
+            avatarEl.style.backgroundImage = 'url(' + savedAvatar + ')';
+            avatarEl.style.backgroundSize = 'cover';
+            avatarEl.style.backgroundPosition = 'center';
+            avatarEl.textContent = '';
+        } else if (avatarEl) {
+            avatarEl.textContent = userName.charAt(0).toUpperCase();
+        }
+
+        // Load toggle states
+        ['notif_email', 'notif_discord', 'notif_push'].forEach(function(key) {
+            var val = localStorage.getItem(key);
+            var el = document.querySelector('.toggle-switch[data-key="' + key + '"]');
+            if (el) {
+                if (val === 'false') el.classList.remove('active');
+                else el.classList.add('active');
+            }
+        });
+    }
+
+    // Avatar click
+    document.getElementById('settingsAvatar')?.addEventListener('click', function() {
+        document.getElementById('settingsAvatarInput').click();
+    });
+
+    document.getElementById('settingsAvatarInput')?.addEventListener('change', function() {
+        var file = this.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var dataUrl = e.target.result;
+            var did = localStorage.getItem('discord_user') || '';
+            localStorage.setItem('profile_avatar_' + did, dataUrl);
+            var avatarEl = document.getElementById('settingsAvatar');
+            if (avatarEl) {
+                avatarEl.style.backgroundImage = 'url(' + dataUrl + ')';
+                avatarEl.style.backgroundSize = 'cover';
+                avatarEl.style.backgroundPosition = 'center';
+                avatarEl.textContent = '';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Save display name
+    document.getElementById('settingsSaveName')?.addEventListener('click', function() {
+        var val = document.getElementById('settingsDisplayName').value.trim();
+        if (!val) return;
+        localStorage.setItem('display_name', val);
+        var nameEl = document.getElementById('settingsName');
+        if (nameEl) nameEl.textContent = val;
+        var msg = document.getElementById('settingsNameMsg');
+        msg.textContent = 'Saved!';
+        msg.style.color = '#22c55e';
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 2000);
+    });
+
+    // Save bio
+    document.getElementById('settingsSaveBio')?.addEventListener('click', function() {
+        var val = document.getElementById('settingsBio').value.trim();
+        var saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
+        saved.bio = val;
+        localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
+        var msg = document.getElementById('settingsBioMsg');
+        msg.textContent = 'Bio saved!';
+        msg.style.color = '#22c55e';
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 2000);
+    });
+
+    // Save Discord ID
+    document.getElementById('settingsSaveDiscord')?.addEventListener('click', function() {
+        var val = document.getElementById('settingsDiscordId').value.trim();
+        if (!val) return;
+        var saved = JSON.parse(localStorage.getItem(PROFILE_LS_KEY) || '{}');
+        saved.discord = val;
+        localStorage.setItem(PROFILE_LS_KEY, JSON.stringify(saved));
+        localStorage.setItem('discord_user', val);
+        var msg = document.getElementById('settingsDiscordMsg');
+        msg.textContent = 'Saved!';
+        msg.style.color = '#22c55e';
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 2000);
+    });
+
+    // Save password
+    document.getElementById('settingsSavePassword')?.addEventListener('click', function() {
+        var val = document.getElementById('settingsPassword').value.trim();
+        var msg = document.getElementById('settingsPwMsg');
+        if (!val || val.length < 6) {
+            msg.textContent = 'Password must be at least 6 characters.';
+            msg.style.color = '#ef4444';
+            msg.style.display = 'block';
+            return;
+        }
+        localStorage.setItem('user_password', val);
+        msg.textContent = 'Password updated!';
+        msg.style.color = '#22c55e';
+        msg.style.display = 'block';
+        document.getElementById('settingsPassword').value = '';
+        setTimeout(function() { msg.style.display = 'none'; }, 2000);
+    });
+
+    // Toggle switches
+    document.querySelectorAll('.toggle-switch').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            var key = this.dataset.key;
+            if (key) localStorage.setItem(key, this.classList.contains('active') ? 'true' : 'false');
+        });
+    });
+
+    // Admin button
+    document.getElementById('settingsAdminBtn')?.addEventListener('click', function() {
+        var did = localStorage.getItem('discord_user');
+        var user = did ? {
+            "953177450391683082": { name: "Glow", license: "8K3X-M9P1-Q2R7-V5N2", admin: true }
+        }[did] : null;
+        if (user && user.admin) { window.location.href = 'admin-dashboard.html'; }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadSettings);
+    setTimeout(loadSettings, 50);
+})();
+</script>
+</body>
+</html>

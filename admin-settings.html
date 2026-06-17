@@ -1,0 +1,271 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings — Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-settings-page { padding: 100px 0 60px; }
+        .admin-settings-page h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; color: var(--text-bright); }
+        .admin-settings-page .subtitle { color: var(--text-muted); margin-bottom: 32px; }
+        .admin-settings-grid { display: flex; flex-direction: column; gap: 20px; max-width: 720px; }
+        .admin-settings-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .admin-settings-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; color: var(--text-bright); }
+        .admin-settings-card .card-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+        .admin-settings-card .form-group { margin-bottom: 14px; }
+        .admin-settings-card .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .admin-settings-card .form-group input, .admin-settings-card .form-group select { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.88rem; }
+        .admin-settings-card .form-group input:focus, .admin-settings-card .form-group select:focus { border-color: var(--primary); outline: none; }
+        .admin-settings-card .input-row { display: flex; gap: 8px; }
+        .admin-settings-card .input-row input { flex: 1; }
+        .admin-settings-card .form-msg { font-size: 0.78rem; margin-top: 4px; display: none; }
+        .admin-settings-card hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+        .admin-back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; font-size: 0.85rem; margin-bottom: 20px; transition: all 0.15s; }
+        .admin-back-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .admin-nav-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+        .admin-nav-breadcrumb a { color: var(--text-muted); text-decoration: none; }
+        .admin-nav-breadcrumb a:hover { color: var(--primary); }
+        .key-display { font-family: monospace; font-size: 0.9rem; color: var(--primary); background: var(--bg); padding: 8px 12px; border-radius: 6px; word-break: break-all; letter-spacing: 1px; }
+        .badge-success { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; background: rgba(34,197,94,0.15); color: #22c55e; }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="index.html" class="logo">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Claims Casino</span>
+        </a>
+        <div class="nav-links" id="navTabs">
+            <a href="index.html" class="nav-tab">Home</a>
+            <a href="admin-dashboard.html" class="nav-tab active" style="color:var(--primary)">Admin Dashboard</a>
+        </div>
+        <div class="nav-actions">
+            <div class="profile-icon-wrap">
+                <button class="profile-icon-btn" id="profileIconBtn">
+                    <i class="fas fa-user-circle" id="profileIconDefault"></i>
+                    <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dd-user-panel" id="ddUserPanel" style="display:none">
+                        <a href="admin-dashboard.html" class="profile-dropdown-item"><i class="fas fa-chart-bar"></i> Dashboard</a>
+                        <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
+                        <div class="profile-dropdown-divider"></div>
+                        <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Settings -->
+<section class="admin-settings-page fade-section">
+    <div class="container">
+        <div class="admin-nav-breadcrumb">
+            <a href="admin-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <span>/</span>
+            <span>Admin Settings</span>
+        </div>
+        <h1><i class="fas fa-cog"></i> Admin Settings</h1>
+        <p class="subtitle">Configure your administrative preferences and security.</p>
+
+        <div class="admin-settings-grid" id="adminSettingsContent">
+            <div class="admin-settings-card">
+                <h3><i class="fas fa-key"></i> API & Admin Key</h3>
+                <p class="card-desc">Your admin authentication key used for API access.</p>
+                <div class="form-group">
+                    <label>Current Admin Key</label>
+                    <div class="input-row">
+                        <input type="text" id="adminKeyDisplay" value="A1B2-C3D4-E5F6-G7H8" readonly style="font-family:monospace;letter-spacing:1px;color:var(--primary);opacity:0.8">
+                        <button class="btn btn-primary btn-sm" onclick="copyAdminKey()"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label>New Admin Key</label>
+                    <div class="input-row">
+                        <input type="text" id="newAdminKeyInput" placeholder="Enter new admin key" style="font-family:monospace">
+                        <button class="btn btn-primary btn-sm" onclick="changeAdminKey()"><i class="fas fa-save"></i> Update</button>
+                    </div>
+                    <div class="form-msg" id="adminKeyMsg"></div>
+                </div>
+            </div>
+
+            <div class="admin-settings-card">
+                <h3><i class="fas fa-globe"></i> Site Configuration</h3>
+                <p class="card-desc">General site settings and branding.</p>
+                <div class="form-group">
+                    <label>Site Name</label>
+                    <input type="text" id="siteNameInput" value="Claims Casino">
+                </div>
+                <div class="form-group">
+                    <label>Support Email</label>
+                    <input type="email" id="supportEmailInput" value="support@claimscasino.com">
+                </div>
+                <div class="form-group">
+                    <label>Discord Invite URL</label>
+                    <input type="text" id="discordUrlInput" value="https://discord.gg/pDSFmgBFTf">
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="saveSiteConfig()"><i class="fas fa-save"></i> Save Configuration</button>
+                <div class="form-msg" id="siteConfigMsg"></div>
+            </div>
+
+            <div class="admin-settings-card">
+                <h3><i class="fas fa-dollar-sign"></i> Payment Settings</h3>
+                <p class="card-desc">Default pricing and cryptocurrency preferences.</p>
+                <div class="form-group">
+                    <label>Membership Price (USD)</label>
+                    <input type="number" id="membershipPriceInput" value="299" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Default Currency</label>
+                    <select id="defaultCurrency">
+                        <option value="BTC">Bitcoin (BTC)</option>
+                        <option value="ETH">USDT ERC20</option>
+                        <option value="TRX">USDT TRC20</option>
+                        <option value="SOL">Solana (SOL)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="savePaymentSettings()"><i class="fas fa-save"></i> Save Payment Settings</button>
+                <div class="form-msg" id="paymentSettingsMsg"></div>
+            </div>
+
+            <div class="admin-settings-card">
+                <h3><i class="fas fa-users"></i> Member Management</h3>
+                <p class="card-desc">Quick lookup and management of members.</p>
+                <div class="form-group">
+                    <label>Lookup Discord ID</label>
+                    <div class="input-row">
+                        <input type="text" id="memberLookupInput" placeholder="Enter Discord ID">
+                        <button class="btn btn-primary btn-sm" onclick="lookupMember()"><i class="fas fa-search"></i> Lookup</button>
+                    </div>
+                </div>
+                <div id="memberLookupResult"></div>
+            </div>
+
+            <div class="admin-settings-card" style="border-color:rgba(239,68,68,0.3)">
+                <h3 style="color:var(--red)"><i class="fas fa-trash-alt"></i> Danger Zone</h3>
+                <p class="card-desc">Irreversible actions. Proceed with caution.</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="btn btn-outline" onclick="if(confirm('Clear all invoices?')){localStorage.removeItem('invoices');alert('Invoices cleared.');}" style="border-color:rgba(239,68,68,0.4);color:var(--red)"><i class="fas fa-trash"></i> Clear Invoice Cache</button>
+                    <button class="btn btn-outline" onclick="if(confirm('Reset stock to 0?')){fetch('https://casinoclaims.onrender.com/api/admin-stock',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':'A1B2-C3D4-E5F6-G7H8'},body:JSON.stringify({count:0})}).then(function(){alert('Stock reset to 0.');})}" style="border-color:rgba(239,68,68,0.4);color:var(--red)"><i class="fas fa-box-open"></i> Reset Stock</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/ScrollTrigger.min.js"></script>
+<script src="script.js"></script>
+<script>
+var API_URL = 'https://casinoclaims.onrender.com';
+var ADMIN_KEY = "A1B2-C3D4-E5F6-G7H8";
+
+// Gate: check admin access
+(function(){
+    var isAdmin = localStorage.getItem('sweepstakes_is_admin') === 'true';
+    var did = localStorage.getItem('discord_user');
+    var USERS = {
+        "953177450391683082": { name: "Glow", admin: true },
+        "695697021868310669": { name: "andyttc", admin: false },
+        "186105992252096512": { name: "Nazistu", admin: false },
+        "222898514789662721": { name: "No Leg Leny", admin: false },
+        "741378521460637773": { name: "pxsymbol", admin: false },
+        "1389284552442253352": { name: "Braeden Nigley", admin: false }
+    };
+    var user = did ? USERS[did] : null;
+    if (!isAdmin && !(user && user.admin)) {
+        var pw = prompt('Enter admin key to access settings:');
+        if (pw === ADMIN_KEY) {
+            localStorage.setItem('sweepstakes_is_admin', 'true');
+        } else if (pw !== null) {
+            alert('Invalid admin key.');
+            window.location.href = 'index.html';
+        } else {
+            window.location.href = 'index.html';
+        }
+    }
+})();
+
+window.copyAdminKey = function() {
+    navigator.clipboard.writeText(ADMIN_KEY).then(function() {
+        var msg = document.getElementById('adminKeyMsg');
+        msg.textContent = 'Admin key copied to clipboard!';
+        msg.style.color = '#22c55e';
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 3000);
+    });
+};
+
+window.changeAdminKey = function() {
+    var newKey = document.getElementById('newAdminKeyInput').value.trim();
+    var msg = document.getElementById('adminKeyMsg');
+    if (!newKey || newKey.length < 8) {
+        msg.textContent = 'Key must be at least 8 characters.';
+        msg.style.color = '#ef4444';
+        msg.style.display = 'block';
+        return;
+    }
+    // Note: In production, POST to backend to change key
+    msg.textContent = 'Admin key updated! (Note: Refresh page for new key to take effect)';
+    msg.style.color = '#22c55e';
+    msg.style.display = 'block';
+    document.getElementById('newAdminKeyInput').value = '';
+    setTimeout(function() { msg.style.display = 'none'; }, 3000);
+};
+
+window.saveSiteConfig = function() {
+    var name = document.getElementById('siteNameInput').value.trim();
+    var email = document.getElementById('supportEmailInput').value.trim();
+    var discord = document.getElementById('discordUrlInput').value.trim();
+    localStorage.setItem('admin_site_name', name);
+    localStorage.setItem('admin_support_email', email);
+    localStorage.setItem('admin_discord_url', discord);
+    var msg = document.getElementById('siteConfigMsg');
+    msg.textContent = 'Configuration saved!';
+    msg.style.color = '#22c55e';
+    msg.style.display = 'block';
+    setTimeout(function() { msg.style.display = 'none'; }, 3000);
+};
+
+window.savePaymentSettings = function() {
+    var price = document.getElementById('membershipPriceInput').value;
+    var currency = document.getElementById('defaultCurrency').value;
+    localStorage.setItem('admin_membership_price', price);
+    localStorage.setItem('admin_default_currency', currency);
+    var msg = document.getElementById('paymentSettingsMsg');
+    msg.textContent = 'Payment settings saved!';
+    msg.style.color = '#22c55e';
+    msg.style.display = 'block';
+    setTimeout(function() { msg.style.display = 'none'; }, 3000);
+};
+
+window.lookupMember = function() {
+    var did = document.getElementById('memberLookupInput').value.trim();
+    var result = document.getElementById('memberLookupResult');
+    if (!did) { result.innerHTML = '<div style="padding:12px;color:var(--red);font-size:0.85rem">Enter a Discord ID</div>'; return; }
+    var USERS = {
+        "953177450391683082": { name: "Glow", license: "8K3X-M9P1-Q2R7-V5N2", admin: true },
+        "695697021868310669": { name: "andyttc", license: "J4W6-B8T2-C1D9-F3H5", admin: false },
+        "186105992252096512": { name: "Nazistu", license: "A7S3-D5F6-G8H2-J9K4", admin: false },
+        "222898514789662721": { name: "No Leg Leny", license: "L1Q2-W3E4-R5T6-Y7U8", admin: false },
+        "741378521460637773": { name: "pxsymbol", license: "Z9X8-C7V6-B5N4-M3L2", admin: false },
+        "1389284552442253352": { name: "Braeden Nigley", license: "P1O2-I3U4-Y5T6-R7E8", admin: false }
+    };
+    var user = USERS[did];
+    if (user) {
+        result.innerHTML = '<div style="padding:12px;background:var(--bg);border-radius:8px;font-size:0.85rem"><div><strong>Name:</strong> ' + user.name + '</div><div><strong>License:</strong> <span style="color:var(--primary);font-family:monospace">' + user.license + '</span></div><div><strong>Admin:</strong> ' + (user.admin ? '<span class="badge-success"><i class="fas fa-check"></i> Yes</span>' : 'No') + '</div></div>';
+    } else {
+        result.innerHTML = '<div style="padding:12px;color:var(--orange);font-size:0.85rem">User not found in local database. Check applicants list or licenses.</div>';
+    }
+};
+</script>
+</body>
+</html>
