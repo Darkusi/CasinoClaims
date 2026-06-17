@@ -6,12 +6,15 @@ import time
 import socket
 import hashlib
 import secrets
+import random
 import traceback
 from datetime import datetime
 from pathlib import Path
 
+import re
 import requests
 from flask import Flask, jsonify, request, send_from_directory, make_response, session, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # ================== CONFIGURATION ==================
 SCRIPT_DIR = Path(__file__).parent
@@ -26,15 +29,35 @@ USERS = {
 }
 ADMIN_KEY = "A1B2-C3D4-E5F6-G7H8"
 MEMBERSHIP_DIR = SCRIPT_DIR / "membership-site"
-CLAIMS_CASINO_DIR = SCRIPT_DIR.parent / "Claims Casino"
+CLAIMS_CASINO_DIR = Path(os.environ.get("CLAIMS_CASINO_DIR", str(SCRIPT_DIR.parent / "Claims Casino")))
 ADMIN_USERS_FILE = SCRIPT_DIR / "admin_users.json"
 APPROVED_USERS_FILE = SCRIPT_DIR / "approved_users.json"
+USERS_FILE = SCRIPT_DIR / "users.json"
 SESSION_SECRET = secrets.token_hex(32)
 
 FLASK_PORT = 5001
 CHECK_INTERVAL = 60
 SUBREDDITS = ["SweepStakeSideHustle"]
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+USER_AGENT = "python:ClaimsCasino:1.0 (by /u/Glow)"
+
+# Shared session with cookie persistence for Reddit fetches
+_reddit_session = requests.Session()
+_reddit_session.headers.update({"User-Agent": USER_AGENT, "Accept": "application/json"})
+
+def _reddit_get(url, retries=3):
+    """GET a Reddit JSON endpoint with jitter delay + exponential backoff on 429/403."""
+    time.sleep(random.uniform(1.0, 2.5))
+    for attempt in range(retries):
+        resp = _reddit_session.get(url, timeout=15)
+        if resp.status_code == 200:
+            return resp
+        if resp.status_code in (429, 403) and attempt < retries - 1:
+            wait = (2 ** attempt) + random.uniform(0, 1)
+            print(f"[Reddit] {resp.status_code} on {url[:60]} — retrying in {wait:.1f}s (attempt {attempt+1}/{retries})")
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+    return resp
 
 # Discord webhooks
 FLOOD_WEBHOOK = "https://canary.discord.com/api/webhooks/1498489497032196158/E5ay3hVqPyEkqojKCLmFyCAiM1MGkop5plEsSclMMbP35KDiwHnBPhgjwVmoKzSozOB7"
@@ -76,7 +99,7 @@ def load_license_keys():
     # Initialize with default key
     keys = {
         "SPIN-2024-LIVE": {"status": "active", "tier": "premium", "created": time.time()},
-        "2026": {"status": "active", "tier": "basic", "created": time.time()}
+        "2026": {"status": "active", "tier": "premium", "created": time.time()}
     }
     save_license_keys(keys)
     return keys
@@ -292,13 +315,13 @@ def save_claim_schedule(data):
 def fetch_daily_freebies():
     """Fetch all free SC/spin posts from last 24h for dashboard display (no Reddit references)"""
     try:
-        from datetime import datetime
+        import traceback
         all_posts = []
         for sr in SUBREDDITS:
             for sort in ["hot", "new", "top"]:
-                url = f"https://www.reddit.com/r/{sr}/{sort}.json?limit=100"
+                url = f"https://old.reddit.com/r/{sr}/{sort}.json?limit=100"
                 try:
-                    resp = requests.get(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"}, timeout=15)
+                    resp = _reddit_get(url)
                     if resp.status_code == 200:
                         data = resp.json()
                         if "data" in data and "children" in data["data"]:
@@ -329,8 +352,12 @@ def fetch_daily_freebies():
                                             "created_utc": post_time,
                                             "is_free_spin": sc_amount is None
                                         })
-                except:
-                    continue
+                except requests.exceptions.Timeout:
+                    print(f"[Reddit] Timeout fetching daily freebies {sr}/{sort}")
+                except requests.exceptions.ConnectionError:
+                    print(f"[Reddit] Connection error fetching daily freebies {sr}/{sort}")
+                except Exception as e:
+                    print(f"[Reddit] Error fetching daily freebies {sr}/{sort}: {e}")
         seen = set()
         unique = []
         for post in all_posts:
@@ -340,7 +367,9 @@ def fetch_daily_freebies():
                 unique.append(post)
         unique.sort(key=lambda x: x.get("created_utc", 0), reverse=True)
         return unique[:50]
-    except:
+    except Exception as e:
+        print(f"[Reddit] fetch_daily_freebies failed: {e}")
+        traceback.print_exc()
         return []
 
 def daily_freebies_loop():
@@ -4450,20 +4479,9 @@ def fetch_reddit_posts():
     
     for sr in SUBREDDITS:
         for sort in ["hot", "new"]:
-            url = f"https://www.reddit.com/r/{sr}/{sort}.json?limit=25"
+            url = f"https://old.reddit.com/r/{sr}/{sort}.json?limit=25"
             try:
-                resp = requests.get(url, headers={
-                    "User-Agent": USER_AGENT,
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                    "Accept-Language": "en-US,en;q=0.5",
-                    "Accept-Encoding": "gzip, deflate, br",
-                    "Connection": "keep-alive",
-                    "Upgrade-Insecure-Requests": "1",
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "none",
-                    "Cache-Control": "max-age=0"
-                }, timeout=10)
+                resp = _reddit_get(url, retries=3)
                 if resp.status_code == 200:
                     data = resp.json()
                     if "data" in data and "children" in data["data"]:
@@ -4480,8 +4498,14 @@ def fetch_reddit_posts():
                                 "stickied": p.get("stickied"),
                                 "created_utc": p.get("created_utc"),
                             })
+                else:
+                    print(f"[Reddit] {sr}/{sort} returned status {resp.status_code}")
+            except requests.exceptions.Timeout:
+                print(f"[Reddit] Timeout fetching {sr}/{sort}")
+            except requests.exceptions.ConnectionError:
+                print(f"[Reddit] Connection error fetching {sr}/{sort}")
             except Exception as e:
-                continue
+                print(f"[Reddit] Error fetching {sr}/{sort}: {e}")
     
     return posts
 
@@ -4868,30 +4892,55 @@ def membership_page():
         return send_from_directory(MEMBERSHIP_DIR, "index.html")
     return "<h1>Membership</h1><p>Membership content coming soon.</p><a href='/'>Back to Dashboard</a>"
 
+def _check_admin_auth():
+    """Return True if session auth or X-Admin-Key header matches ADMIN_KEY."""
+    if session.get('admin_id') or session.get('admin_email'):
+        return True
+    key_header = request.headers.get('X-Admin-Key', '')
+    if key_header == ADMIN_KEY:
+        return True
+    return False
+
+def _admin_key_header(headers):
+    """Add X-Admin-Key to headers dict if available."""
+    h = dict(headers)
+    h['X-Admin-Key'] = ADMIN_KEY
+    return h
+
 @app.route("/api/admin-licenses")
 def api_admin_licenses():
-    if not session.get('admin_id') and not session.get('admin_email'):
+    if not _check_admin_auth():
         return jsonify({"error": "Unauthorized"}), 401
     keys = load_license_keys()
     return jsonify(keys)
 
 @app.route("/api/admin-generate-license", methods=["POST"])
 def api_admin_generate_license():
-    if not session.get('admin_id') and not session.get('admin_email'):
+    if not _check_admin_auth():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True) or {}
-    tier = data.get("tier", "basic")
-    if tier not in ("basic", "premium"):
+    tier = data.get("tier", "premium")
+    assigned_to = data.get("assigned_to", "").strip()
+    notes = data.get("notes", "").strip()
+    manual_key = data.get("manual_key", "").strip().upper()
+    if tier not in ("premium", "staff"):
         return jsonify({"error": "Invalid tier"}), 400
-    new_key = generate_license_key()
+    if manual_key:
+        new_key = manual_key
+    else:
+        new_key = generate_license_key()
     keys = load_license_keys()
     keys[new_key] = {"status": "active", "tier": tier, "created": time.time()}
+    if assigned_to:
+        keys[new_key]["assigned_to"] = assigned_to
+    if notes:
+        keys[new_key]["notes"] = notes
     save_license_keys(keys)
     return jsonify({"ok": True, "key": new_key, "tier": tier})
 
 @app.route("/api/admin-revoke-license", methods=["POST"])
 def api_admin_revoke_license():
-    if not session.get('admin_id') and not session.get('admin_email'):
+    if not _check_admin_auth():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     key_to_revoke = data.get("key", "").strip()
@@ -4928,6 +4977,8 @@ def api_data():
 
 @app.route("/api/admin-stats")
 def api_admin_stats():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
     approved = load_approved_users()
     with state_lock:
         return jsonify({
@@ -5227,8 +5278,35 @@ class CasinoAutomation:
 def serve_claims_casino(filename="index.html"):
     return send_from_directory(str(CLAIMS_CASINO_DIR), filename)
 
+@app.route("/guides")
+def guides_page():
+    return send_from_directory(str(CLAIMS_CASINO_DIR), "guides.html")
+
 # ── Embed dashboard (no auth) for inline display ──
 APPLICANTS_FILE = SCRIPT_DIR / "applicants.json"
+
+STOCK_FILE = SCRIPT_DIR / "stock.json"
+INVOICES_FILE = SCRIPT_DIR / "invoices.json"
+
+def load_stock():
+    if not STOCK_FILE.exists():
+        return {"count": 0}
+    with open(STOCK_FILE) as f:
+        return json.load(f)
+
+def save_stock(data):
+    with open(STOCK_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def load_invoices():
+    if not INVOICES_FILE.exists():
+        return []
+    with open(INVOICES_FILE) as f:
+        return json.load(f)
+
+def save_invoices(data):
+    with open(INVOICES_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 def load_applicants():
     if not APPLICANTS_FILE.exists():
@@ -5238,6 +5316,16 @@ def load_applicants():
 
 def save_applicants(data):
     with open(APPLICANTS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def load_users():
+    if not USERS_FILE.exists():
+        return []
+    with open(USERS_FILE) as f:
+        return json.load(f)
+
+def save_users(data):
+    with open(USERS_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
 @app.route("/api/track-page", methods=["POST"])
@@ -5253,10 +5341,114 @@ def api_track_page():
 
 @app.route("/api/admin-monitor")
 def api_admin_monitor():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
     now = int(time.time() * 1000)
     with tracked_lock:
         active = {k: v for k, v in tracked_users.items() if now - v.get("last_seen", 0) < 30000}
     return jsonify(active)
+
+@app.route("/api/stock")
+def api_stock():
+    stock = load_stock()
+    return jsonify(stock)
+
+@app.route("/api/admin-stock", methods=["POST"])
+def api_admin_stock():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(silent=True) or {}
+    count = data.get("count", 0)
+    if not isinstance(count, int) or count < 0:
+        return jsonify({"error": "Invalid count"}), 400
+    stock = {"count": count, "updated": time.time()}
+    save_stock(stock)
+    return jsonify({"ok": True, "count": count})
+
+@app.route("/api/cart-purchase", methods=["POST"])
+def api_cart_purchase():
+    data = request.get_json(silent=True) or {}
+    discord_id = data.get("discord_id", "")
+    currency = data.get("currency", "BTC")
+    amount = data.get("amount", 299.0)
+    address = data.get("address", "")
+    private_key = data.get("private_key", "")
+    invoice_id = data.get("invoice_id", "")
+
+    stock = load_stock()
+    if stock.get("count", 0) < 1:
+        return jsonify({"ok": False, "error": "Out of stock"}), 400
+
+    stock["count"] -= 1
+    save_stock(stock)
+
+    invoices = load_invoices()
+    invoices.append({
+        "id": invoice_id,
+        "discord_id": discord_id,
+        "currency": currency,
+        "amount": amount,
+        "address": address,
+        "private_key": private_key,
+        "status": "pending",
+        "created": time.time()
+    })
+    save_invoices(invoices)
+
+    return jsonify({"ok": True, "invoice_id": invoice_id, "remaining": stock["count"]})
+
+@app.route("/api/admin-invoices")
+def api_admin_invoices():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    invoices = load_invoices()
+    return jsonify(invoices)
+
+@app.route("/api/admin-invoice", methods=["POST"])
+def api_admin_invoice():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(silent=True) or {}
+    invoices = load_invoices()
+    invoices.append({
+        "id": data.get("id", ""),
+        "discord_id": data.get("discord_id", ""),
+        "currency": data.get("currency", ""),
+        "amount": data.get("amount", 0),
+        "address": data.get("address", ""),
+        "private_key": data.get("private_key", ""),
+        "qr_data": data.get("qr_data", ""),
+        "status": "pending",
+        "created": time.time()
+    })
+    save_invoices(invoices)
+    return jsonify({"ok": True})
+
+@app.route("/api/admin-update-invoice", methods=["POST"])
+def api_admin_update_invoice():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(silent=True) or {}
+    invoice_id = data.get("id", "")
+    new_status = data.get("status", "")
+    invoices = load_invoices()
+    for inv in invoices:
+        if inv.get("id") == invoice_id:
+            inv["status"] = new_status
+            license_key = ""
+            if new_status == "paid":
+                license_key = generate_license_key()
+                keys = load_license_keys()
+                keys[license_key] = {
+                    "status": "active",
+                    "tier": "premium",
+                    "created": time.time(),
+                    "assigned_to": inv.get("discord_id", "")
+                }
+                save_license_keys(keys)
+            save_invoices(invoices)
+            return jsonify({"ok": True, "license_key": license_key})
+    return jsonify({"error": "Invoice not found"}), 404
 
 @app.route("/api/waitlist-apply", methods=["POST"])
 def api_waitlist_apply():
@@ -5265,6 +5457,8 @@ def api_waitlist_apply():
     discord = data.get("discord", "").strip()
     password = data.get("password", "")
     typ = data.get("type", "waitlist")
+    username = data.get("username", discord or "").strip()
+    avatar_url = data.get("avatar_url", "").strip()
 
     if not email:
         return jsonify({"ok": False, "error": "Email required"}), 400
@@ -5277,13 +5471,18 @@ def api_waitlist_apply():
     applicants.append({
         "email": email,
         "discord": discord,
+        "username": username,
+        "avatar_url": avatar_url,
         "password": password if password else "",
         "status": "pending",
         "type": typ,
         "position": position,
         "timestamp": time.time()
     })
-    save_applicants(applicants)
+    try:
+        save_applicants(applicants)
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"Save failed: {e}"}), 500
 
     return jsonify({"ok": True, "position": position})
 
@@ -5311,11 +5510,15 @@ def api_check_approval():
 
 @app.route("/api/admin-applicants")
 def api_admin_applicants():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
     applicants = load_applicants()
     return jsonify(applicants)
 
 @app.route("/api/admin-applicant-action", methods=["POST"])
 def api_admin_applicant_action():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     email = data.get("email", "")
     action = data.get("action", "")  # approve, deny, interview, save
@@ -5341,8 +5544,100 @@ def embed_dashboard():
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
+# ── Auth Routes ──
+
+@app.route("/api/auth/signup", methods=["POST"])
+def api_auth_signup():
+    data = request.get_json(silent=True) or {}
+    email = data.get("email", "").strip().lower()
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+
+    if not email or not username or not password:
+        return jsonify({"ok": False, "error": "Email, username, and password are required."}), 400
+    if len(password) < 6:
+        return jsonify({"ok": False, "error": "Password must be at least 6 characters."}), 400
+    if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
+        return jsonify({"ok": False, "error": "Invalid email address."}), 400
+    if len(username) < 2:
+        return jsonify({"ok": False, "error": "Username must be at least 2 characters."}), 400
+
+    users = load_users()
+    for u in users:
+        if u["email"] == email:
+            return jsonify({"ok": False, "error": "An account with this email already exists."}), 409
+        if u["username"].lower() == username.lower():
+            return jsonify({"ok": False, "error": "This username is already taken."}), 409
+
+    user_id = "u_" + secrets.token_hex(8)
+    new_user = {
+        "id": user_id,
+        "email": email,
+        "username": username,
+        "password_hash": generate_password_hash(password),
+        "discord": "",
+        "approved": False,
+        "created_at": time.time()
+    }
+    users.append(new_user)
+    save_users(users)
+
+    session["user_id"] = user_id
+    session.permanent = True
+    return jsonify({"ok": True, "user": {"id": user_id, "email": email, "username": username}})
+
+@app.route("/api/auth/login", methods=["POST"])
+def api_auth_login():
+    data = request.get_json(silent=True) or {}
+    login = data.get("login", "").strip().lower()
+    password = data.get("password", "")
+
+    if not login or not password:
+        return jsonify({"ok": False, "error": "Email/username and password are required."}), 400
+
+    users = load_users()
+    found = None
+    for u in users:
+        if u["email"] == login or u["username"].lower() == login:
+            found = u
+            break
+
+    if not found:
+        return jsonify({"ok": False, "error": "Account not found."}), 401
+
+    if not check_password_hash(found["password_hash"], password):
+        return jsonify({"ok": False, "error": "Wrong password."}), 401
+
+    session["user_id"] = found["id"]
+    session.permanent = True
+    return jsonify({"ok": True, "user": {"id": found["id"], "email": found["email"], "username": found["username"]}})
+
+@app.route("/api/auth/logout", methods=["POST"])
+def api_auth_logout():
+    session.clear()
+    return jsonify({"ok": True})
+
+@app.route("/api/auth/me")
+def api_auth_me():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False, "error": "Not logged in."}), 401
+    users = load_users()
+    for u in users:
+        if u["id"] == user_id:
+            return jsonify({"ok": True, "user": {"id": u["id"], "email": u["email"], "username": u["username"]}})
+    return jsonify({"ok": False, "error": "User not found."}), 401
+
 # ================== MAIN ==================
 if __name__ == "__main__":
+    # Pre-approve known users
+    approved = load_approved_users()
+    KNOWN_IDS = ["695697021868310669", "186105992252096512", "222898514789662721", "741378521460637773", "1389284552442253352"]
+    for did in KNOWN_IDS:
+        if did not in approved["discord_ids"]:
+            approved["discord_ids"].append(did)
+    save_approved_users(approved)
+
     # Ensure membership directory exists
     MEMBERSHIP_DIR.mkdir(exist_ok=True)
     if not (MEMBERSHIP_DIR / "index.html").exists():

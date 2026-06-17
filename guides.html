@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guides — Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --guide-accent: #FFD700;
+            --guide-accent-hover: #FFB300;
+            --guide-bg: #0a0a0c;
+            --guide-sidebar: #0c0c0e;
+            --guide-card: #101012;
+            --guide-border: rgba(255,255,255,0.06);
+            --guide-text: #d0d0d8;
+            --guide-text-muted: #707078;
+        }
+
+        .guide-wrap {
+            display: flex;
+            min-height: calc(100vh - 64px);
+            margin-top: 64px;
+            background: var(--guide-bg);
+        }
+
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 76px; left: 16px;
+            z-index: 30;
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s;
+        }
+        .hamburger-btn:hover { background: var(--bg-elevated); }
+
+        .guide-sidebar {
+            position: sticky;
+            top: 64px;
+            width: 250px;
+            height: calc(100vh - 64px);
+            background: var(--guide-sidebar);
+            border-right: 1px solid var(--guide-border);
+            padding: 28px 16px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform .3s ease;
+            z-index: 20;
+        }
+        .guide-sidebar-logo {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--guide-accent);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            padding: 0 8px;
+        }
+        .guide-sidebar-logo i { font-size: 1.3rem; }
+        .guide-sidebar .group-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--guide-text-muted);
+            padding: 20px 12px 6px;
+            font-weight: 600;
+        }
+        .guide-sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            color: var(--guide-text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: all .15s;
+            margin-bottom: 2px;
+        }
+        .guide-sidebar nav a:hover { color: var(--text); background: var(--guide-card); }
+        .guide-sidebar nav a.active { color: var(--guide-accent); background: var(--guide-card); font-weight: 600; }
+        .guide-sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 19;
+        }
+
+        .guide-main {
+            flex: 1;
+            max-width: 900px;
+            padding: 48px 56px 120px;
+            min-width: 0;
+        }
+
+        .guide-hero {
+            margin-bottom: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+        .guide-hero::before {
+            content: '';
+            position: absolute;
+            width: 450px; height: 450px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(255,215,0,0.06) 0%, transparent 65%);
+            top: -25%; left: -20%;
+            pointer-events: none;
+            animation: guideOrbFloat 16s ease-in-out infinite;
+        }
+        .guide-hero::after {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(255,215,0,0.04) 0%, transparent 65%);
+            bottom: -20%; right: -15%;
+            pointer-events: none;
+            animation: guideOrbFloat 14s ease-in-out infinite reverse;
+        }
+        @keyframes guideOrbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(60px, -50px) scale(1.12); }
+            50% { transform: translate(-40px, 40px) scale(0.88); }
+            75% { transform: translate(30px, -20px) scale(1.05); }
+        }
+        .guide-hero .badge {
+            display: inline-block;
+            background: var(--guide-card);
+            border: 1px solid var(--guide-border);
+            border-radius: 20px;
+            padding: 5px 16px;
+            font-size: 0.78rem;
+            color: var(--guide-accent);
+            margin-bottom: 16px;
+        }
+        .guide-hero h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--guide-accent), var(--guide-accent-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            line-height: 1.1;
+        }
+        .guide-hero-brand {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            margin-top: 20px;
+        }
+        .guide-hero-icon {
+            width: 80px; height: 80px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--guide-accent), var(--guide-accent-hover));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #000;
+        }
+        .guide-hero-text { text-align: left; }
+        .guide-hero-text p {
+            color: var(--guide-text);
+            font-size: 1rem;
+            margin: 6px 0 0;
+            max-width: 520px;
+        }
+
+        .guide-main section { margin-bottom: 52px; }
+        .guide-main section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--guide-border);
+            color: var(--text);
+        }
+        .guide-main section h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 22px 0 10px;
+            color: var(--guide-accent);
+        }
+        .guide-main section p { color: var(--guide-text); margin-bottom: 14px; font-size: 0.95rem; }
+        .guide-main section ul, .guide-main section ol { color: var(--guide-text); margin: 0 0 14px 24px; font-size: 0.95rem; }
+        .guide-main section li { margin-bottom: 6px; }
+        .guide-main section a { color: var(--guide-accent); text-decoration: none; }
+        .guide-main section a:hover { text-decoration: underline; }
+
+        .guide-card {
+            background: var(--guide-card);
+            border: 1px solid var(--guide-border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 14px;
+            transition: border-color .2s;
+        }
+        .guide-card:hover { border-color: var(--guide-accent); }
+        .guide-card-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .guide-card-title code { color: var(--guide-accent); }
+        .guide-card-desc { color: var(--guide-text); font-size: 0.88rem; }
+        .guide-card .tag {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 3px 10px;
+            background: #1a1a20;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            color: var(--guide-accent);
+            font-family: 'Geist', monospace;
+        }
+
+        pre {
+            background: #0a0a0c;
+            border: 1px solid var(--guide-border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            margin: 14px 0;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            color: #d4d4d8;
+        }
+        code {
+            background: #1a1a20;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88em;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            color: var(--guide-accent);
+        }
+        pre code { background: none; padding: 0; color: inherit; }
+
+        .step-list { counter-reset: step; }
+        .step-item {
+            counter-increment: step;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 18px;
+            padding: 18px 20px;
+            background: var(--guide-card);
+            border-radius: 12px;
+            border: 1px solid var(--guide-border);
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, var(--guide-accent), var(--guide-accent-hover));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #000;
+        }
+        .step-body { flex: 1; }
+        .step-body p { margin: 0; font-size: 0.95rem; }
+
+        .guide-accordion { margin: 12px 0; }
+        .guide-accordion-btn {
+            width: 100%;
+            text-align: left;
+            background: var(--guide-card);
+            border: 1px solid var(--guide-border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: var(--font);
+        }
+        .guide-accordion-btn:hover { border-color: var(--guide-accent); }
+        .guide-accordion-btn .arrow {
+            transition: transform .2s;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .guide-accordion-btn.open .arrow { transform: rotate(180deg); }
+        .guide-accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .3s ease, padding .3s ease;
+            padding: 0 18px;
+            background: var(--guide-card);
+            border: 1px solid var(--guide-border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+        .guide-accordion-btn + .guide-accordion-content { margin-top: -1px; }
+        .guide-accordion-content.open {
+            max-height: 800px;
+            padding: 16px 18px;
+        }
+        .guide-accordion-content p { margin-bottom: 10px; font-size: 0.9rem; }
+        .guide-accordion-content p:last-child { margin-bottom: 0; }
+        .guide-accordion-content pre { margin: 10px 0; }
+
+        .cmd-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        .cmd-table th {
+            text-align: left;
+            padding: 10px 14px;
+            background: #0a0a0c;
+            color: var(--guide-text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--guide-border);
+        }
+        .cmd-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--guide-border);
+            color: var(--guide-text);
+        }
+        .cmd-table td:first-child code { font-size: 0.85rem; }
+        .cmd-table tr:hover td { background: var(--guide-card); }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 14px 0;
+        }
+        .grid-auto {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin: 14px 0;
+        }
+
+        .guide-tip {
+            background: #0e1a0e;
+            border: 1px solid #1a2e1a;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin: 14px 0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .guide-tip .icon { font-size: 1.1rem; flex-shrink: 0; color: #57F287; }
+        .guide-tip p { color: #8ab88a; font-size: 0.88rem; margin: 0; }
+
+        .guide-warn {
+            background: #1e160e;
+            border: 1px solid #2e2210;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin: 14px 0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .guide-warn .icon { font-size: 1.1rem; flex-shrink: 0; color: var(--guide-accent); }
+        .guide-warn p { color: #b89a50; font-size: 0.88rem; margin: 0; }
+
+        .guide-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--guide-text-muted);
+            text-decoration: none;
+            font-size: 0.82rem;
+            margin-bottom: 24px;
+            transition: color .15s;
+        }
+        .guide-back:hover { color: var(--guide-accent); }
+
+        .guide-footer {
+            margin-top: 72px;
+            padding-top: 20px;
+            border-top: 1px solid var(--guide-border);
+            color: var(--guide-text-muted);
+            font-size: 0.82rem;
+        }
+        .guide-footer a { color: var(--guide-accent); text-decoration: none; }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        .split-chars { display: inline-block; white-space: pre; }
+
+        @media (max-width: 900px) {
+            .hamburger-btn { display: flex; }
+            .guide-sidebar {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                transform: translateX(-100%);
+                height: calc(100vh - 64px);
+            }
+            .guide-sidebar.open { transform: translateX(0); }
+            .guide-sidebar-overlay.open { display: block; }
+            .guide-main { margin-left: 0; padding: 24px 20px 80px; }
+            .guide-hero h1 { font-size: 1.8rem; }
+            .guide-hero-brand { flex-direction: column; align-items: center; gap: 16px; }
+            .guide-hero-icon { width: 64px; height: 64px; font-size: 1.5rem; }
+            .guide-hero-text { text-align: center; }
+            .guide-hero-text p { max-width: 100%; }
+            .step-item { flex-direction: column; }
+            .step-num { width: 26px; height: 26px; font-size: 0.75rem; }
+            .cmd-table { font-size: 0.78rem; }
+            .cmd-table td, .cmd-table th { padding: 8px 10px; }
+            .grid-3 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="scrollProgress"></div>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="index.html" class="logo">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Claims Casino</span>
+        </a>
+        <div class="nav-links" id="navTabs">
+            <a href="index.html" class="nav-tab">Home</a>
+            <a href="plans.html" class="nav-tab">Plans</a>
+            <a href="features.html" class="nav-tab">Features</a>
+            <a href="testimonials.html" class="nav-tab">Testimonials</a>
+            <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+            <a href="faq.html" class="nav-tab">FAQ</a>
+            <a href="contact.html" class="nav-tab">Contact</a>
+            <a href="guides.html" class="nav-tab active">Guides</a>
+        </div>
+        <div class="nav-actions">
+            <div class="cart-icon-wrap">
+                <a href="cart.html" class="cart-icon-btn"><i class="fas fa-shopping-bag"></i></a>
+                <span class="cart-badge" id="cartBadge">0</span>
+                <div class="cart-dropdown" id="cartDropdown">
+                    <div class="cart-dropdown-empty" id="cartDropdownEmpty">Your cart is empty</div>
+                </div>
+            </div>
+            <div class="profile-icon-wrap">
+                <button class="profile-icon-btn" id="profileIconBtn">
+                    <i class="fas fa-user-circle" id="profileIconDefault"></i>
+                    <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dd-user-panel" id="ddUserPanel" style="display:none">
+                        <a href="profile.html" class="profile-dropdown-item" id="ddProfile"><i class="fas fa-user"></i> Profile</a>
+                        <a href="settings.html" class="profile-dropdown-item" id="ddSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
+                        <div class="profile-dropdown-divider"></div>
+                        <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="getStartedBtn">Get Access</button>
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+
+<div class="mobile-drawer-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <a href="index.html" class="nav-tab">Home</a>
+    <a href="plans.html" class="nav-tab">Plans</a>
+    <a href="features.html" class="nav-tab">Features</a>
+    <a href="testimonials.html" class="nav-tab">Testimonials</a>
+    <a href="dashboard.html" class="nav-tab" data-auth="required">Dashboard</a>
+    <a href="faq.html" class="nav-tab">FAQ</a>
+    <a href="contact.html" class="nav-tab">Contact</a>
+    <a href="guides.html" class="nav-tab active">Guides</a>
+</div>
+
+<!-- Guide Layout -->
+<div class="guide-wrap">
+
+    <button class="hamburger-btn" id="guideHamburger" aria-label="Guide Menu"><i class="fas fa-bars"></i></button>
+    <div class="guide-sidebar-overlay" id="guideOverlay"></div>
+
+    <aside class="guide-sidebar" id="guideSidebar">
+        <a href="index.html" class="guide-sidebar-logo">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Claims Casino</span>
+        </a>
+        <nav>
+            <div class="group-label">Getting Started</div>
+            <a href="#overview">&#128214; Overview</a>
+            <a href="#installation">&#9881;&#65039; Installation</a>
+            <a href="#setup">&#128295; Discord Setup</a>
+
+            <div class="group-label">Features</div>
+            <a href="#commands">&#9000;&#65039; Commands</a>
+            <a href="#cookies">&#127850; Cookie Claiming</a>
+            <a href="#streamer">&#127916; Streamer Alerts</a>
+            <a href="#autoclaim">&#129302; Auto-Claim</a>
+
+            <div class="group-label">Support</div>
+            <a href="#faq">&#10067; FAQ</a>
+            <a href="#troubleshooting">&#65039;&#8205;&#128295; Troubleshooting</a>
+        </nav>
+    </aside>
+
+    <div class="guide-main">
+
+        <a href="index.html" class="guide-back"><i class="fas fa-arrow-left"></i> Back to home</a>
+
+        <div class="guide-hero">
+            <span class="badge">Claims Casino Automation &middot; v2.1.0</span>
+            <div class="guide-hero-brand">
+                <div class="guide-hero-icon"><i class="fas fa-satellite-dish"></i></div>
+                <div class="guide-hero-text">
+                    <div class="letter-animation"><h1 class="split-text">Claims Casino Guide</h1></div>
+                    <p>Everything you need to know about monitoring, claiming, and never missing a free SC opportunity.</p>
+                </div>
+            </div>
+        </div>
+
+        <section id="overview">
+            <h2>&#128214; Overview</h2>
+            <p>Welcome to Claims Casino Automation. This bot monitors Reddit for free SC and free spins offers, watches Kick streamer chats for dropped links, and claims your daily casino bonuses on autopilot — all delivered to your Discord server. One background process, zero daily effort.</p>
+            <div class="guide-card fade-in">
+                <div class="guide-card-desc">Free SC offers are pulled from casino subreddits every 10 seconds, filtered for real bonuses (no new casino promos or reviews), and posted to your monitor channel with clickable claim links. Streamer alerts arrive in real-time. Daily claims run automatically with your saved cookies.</div>
+            </div>
+        </section>
+
+        <section id="installation">
+            <h2>&#9881;&#65039; Getting Started</h2>
+            <p>After purchasing a membership, you will receive the bot software and your license key through Discord. Follow the steps below to get up and running.</p>
+            <h3>System Requirements</h3>
+            <ul>
+                <li>Windows 10 or later (64-bit)</li>
+                <li>No Node.js, Python, or any runtime required</li>
+                <li>Internet connection</li>
+                <li>~100 MB disk space</li>
+            </ul>
+            <div class="step-list">
+                <div class="step-item fade-in">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <p><strong>Receive your software.</strong> After payment is confirmed, open a ticket in the membership Discord. You'll be sent the bot package and your license key.</p>
+                    </div>
+                </div>
+                <div class="step-item fade-in">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <p><strong>Run the setup.</strong> During setup you'll enter your Discord bot token and channel IDs. These can also be changed later in the settings file.</p>
+                    </div>
+                </div>
+                <div class="step-item fade-in">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <p><strong>Launch</strong> CasinoBot.exe. The console shows module status and the bot comes online in your Discord server. Type <code>/status</code> to confirm everything is running.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="setup">
+            <h2>&#128295; Discord Setup</h2>
+            <p>The setup process asks for your channel IDs. Here's what each channel is for.</p>
+            <h3>Channels</h3>
+            <div class="grid-3" style="margin:14px 0;">
+                <div class="guide-card fade-in">
+                    <div class="guide-card-title"><code>#monitor-posts</code></div>
+                    <div class="guide-card-desc">All free SC and free spins offers appear here as they're found — your main feed.</div>
+                    <span class="tag">MONITOR_CHANNEL_ID</span>
+                </div>
+                <div class="guide-card fade-in">
+                    <div class="guide-card-title"><code>#streamer-chat</code></div>
+                    <div class="guide-card-desc">Kick.com streamer link drops are delivered here in real-time.</div>
+                    <span class="tag">STREAMER_CHANNEL_ID</span>
+                </div>
+                <div class="guide-card fade-in">
+                    <div class="guide-card-title"><code>#daily-claims</code></div>
+                    <div class="guide-card-desc">Interactive panel with Scan and Claim buttons for daily casino bonuses.</div>
+                    <span class="tag">DAILY_CLAIMS_CHANNEL_ID</span>
+                </div>
+            </div>
+            <h3>Discord Bot Settings</h3>
+            <p>In your <a href="https://discord.com/developers/applications" target="_blank" rel="noopener">Discord Developer Portal</a>, go to your bot's settings and enable these under the Bot page:</p>
+            <ul>
+                <li><strong>Server Members Intent</strong></li>
+                <li><strong>Message Content Intent</strong></li>
+            </ul>
+        </section>
+
+        <section id="commands">
+            <h2>&#9000;&#65039; Commands</h2>
+            <p>All commands are slash commands. Type <code>/</code> in your Discord server and they'll appear.</p>
+            <table class="cmd-table fade-in">
+                <thead>
+                    <tr><th>Command</th><th>Description</th><th>Options</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>/status</code></td><td>Show bot uptime, module status, and enabled features</td><td>—</td></tr>
+                    <tr><td><code>/commands</code></td><td>Show all available bot commands</td><td>—</td></tr>
+                    <tr><td><code>/claim</code></td><td>Trigger an immediate daily claim run</td><td>—</td></tr>
+                    <tr><td><code>/setcookie</code></td><td>Save session cookies for a casino</td><td><code>&lt;casino&gt;</code>, <code>&lt;cookie&gt;</code></td></tr>
+                </tbody>
+            </table>
+            <div class="guide-warn">
+                <div class="icon">&#9888;</div>
+                <p>Session cookies contain your login credentials. Never share them. The bot stores them locally and only uses them for claim requests.</p>
+            </div>
+        </section>
+
+        <section id="cookies">
+            <h2>&#127850; Cookie-Based Daily Claiming</h2>
+            <p>To let the bot claim daily bonuses for you, it needs your login cookies. This is a one-time setup per casino. Here's how to grab them from your browser:</p>
+            <h3>Getting Your Cookies</h3>
+            <div class="step-list">
+                <div class="step-item fade-in">
+                    <div class="step-num">1</div>
+                    <div class="step-body"><p><strong>Log in</strong> to the casino in your browser (Chrome, Firefox, Edge).</p></div>
+                </div>
+                <div class="step-item fade-in">
+                    <div class="step-num">2</div>
+                    <div class="step-body"><p><strong>Open Developer Tools</strong> (F12) &rarr; Application tab &rarr; Cookies &rarr; select the casino domain.</p></div>
+                </div>
+                <div class="step-item fade-in">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <p><strong>Copy the cookie string.</strong> Right-click any cookie &rarr; "Copy All" or paste this in the address bar and press Enter:</p>
+                        <pre>javascript:prompt('Cookies:', document.cookie);</pre>
+                    </div>
+                </div>
+                <div class="step-item fade-in">
+                    <div class="step-num">4</div>
+                    <div class="step-body">
+                        <p><strong>Save to the bot</strong> using the <code>/setcookie</code> command:</p>
+                        <pre>/setcookie casino: "Chumba Casino" cookie: "sessionid=abc123; _gid=GA1.2.xyz"</pre>
+                    </div>
+                </div>
+            </div>
+            <h3>Using the Daily Claims Panel</h3>
+            <p>Once your cookies are saved, head to your <code>#daily-claims</code> channel. The panel has three buttons:</p>
+            <div class="grid-3" style="margin:14px 0;">
+                <div class="guide-card" style="border-color:#1a3a1a;"><div class="guide-card-title" style="color:#57F287;">Scan for Dailies</div><div class="guide-card-desc">Checks each casino and reports which bonuses are available to claim right now.</div></div>
+                <div class="guide-card" style="border-color:#3a2a1a;"><div class="guide-card-title" style="color:var(--guide-accent);">Change License Key</div><div class="guide-card-desc">Opens a window to enter or update your license key.</div></div>
+                <div class="guide-card" style="border-color:#1a3a1a;"><div class="guide-card-title" style="color:#57F287;">Claim Available Daily SC</div><div class="guide-card-desc">Submits claims for all available casinos from the last scan. Results appear in the channel.</div></div>
+            </div>
+            <h3>Supported Casinos</h3>
+            <p>The bot supports 8 social casinos out of the box. Enable the ones you have accounts for in <code>data/claim_profiles.json</code>:</p>
+            <div class="grid-auto" style="margin:14px 0;">
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Chumba Casino</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">LuckyLand Slots</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Pulsz</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Stake.us</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Funrize</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Global Poker</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Modo.us</div></div>
+                <div class="guide-card" style="padding:10px 14px;"><div class="guide-card-title" style="font-size:0.85rem;">Sportzino</div></div>
+            </div>
+        </section>
+
+        <section id="streamer">
+            <h2>&#127916; Streamer Alerts</h2>
+            <p>Never miss a link drop during a live stream. The bot watches Kick.com streamer chats and forwards any links to your streamer channel.</p>
+            <h3>How to Set Up</h3>
+            <p>Edit <code>data/streamer_profiles.json</code> and add the streamers you want to follow:</p>
+            <pre>[
+  {
+    "name": "My Streamer",
+    "enabled": true,
+    "kickUsername": "streamername",
+    "monitorLinks": true
+  }
+]</pre>
+            <p>Set <code>enabled: true</code> and restart the bot — it will connect to that streamer's chat on startup.</p>
+            <div class="guide-tip">
+                <div class="icon">&#9432;</div>
+                <p>Streamer alerts use their own channel and dedup system, separate from Reddit monitor posts.</p>
+            </div>
+        </section>
+
+        <section id="autoclaim">
+            <h2>&#129302; Auto-Claim (Scheduled)</h2>
+            <p>Set it and forget it. In addition to the manual Claim button in the panel, the bot runs daily claims on a schedule so you never miss a bonus.</p>
+            <h3>Schedule</h3>
+            <p>By default, auto-claim runs every day at <strong>10:00 AM</strong> (your server's local time). This is configurable per casino profile.</p>
+            <h3>Claim History</h3>
+            <p>Every claim attempt is logged and includes the casino name, date, and whether it succeeded:</p>
+            <ul>
+                <li>Casino name</li>
+                <li>Date and time of attempt</li>
+                <li>Success/failure status</li>
+            </ul>
+            <div class="guide-warn">
+                <div class="icon">&#9888;</div>
+                <p>Auto-claim needs valid session cookies. Without them, the claim will fail (the casino redirects to login). Set up each casino with <code>/setcookie</code> or through the daily claims panel.</p>
+            </div>
+        </section>
+
+        <section id="faq">
+            <h2>&#10067; FAQ</h2>
+
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Does the bot need to stay running 24/7?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Yes, the bot runs as a background process on your Windows machine. It's lightweight (~100 MB RAM) and designed to run minimized. For around-the-clock operation, a cheap VPS or an old laptop works great.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Why are my claims failing?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Most likely missing cookies. The casino needs an active login session to accept a claim. Use <code>/setcookie</code> or the steps in the Cookie Claiming section above.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">How often does the bot check for new posts?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Every 10 seconds. The RSS feed is polled continuously, and new offers appear in your monitor channel within seconds of being posted.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">What kind of posts does the filter catch?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>The bot filters for free SC and free spins offers. It automatically filters out new casino announcements, flash sales, and reviews — so you only see real bonus opportunities.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Can I add more casino profiles?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Yes. Open <code>data/claim_profiles.json</code> and add an entry with the casino name, claim URL, and a word that appears on the page after a successful claim.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">How do I update the bot?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>The bot checks for updates automatically every 24 hours. When a new version is found, it downloads and swaps itself — your settings are preserved.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">How do I get a license key?<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Your license key is provided when you join the membership. Go to your <code>#daily-claims</code> channel and click "Change License Key" to enter it. The key is stored locally and validated on use.</p></div>
+            </div>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>&#65039;&#8205;&#128295; Troubleshooting</h2>
+
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Bot is online but not posting anything<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content">
+                    <p>Check the bot's console window. Common causes:</p>
+                    <ul>
+                        <li>Channel IDs in the settings file are wrong — check with <code>/status</code></li>
+                        <li>The RSS filter isn't matching any current posts</li>
+                        <li>The bot doesn't have permission to send messages in the target channel</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Streamer alerts not working<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Make sure <code>"enabled": true</code> in the streamer profile and the Kick username is correct. Check that <code>STREAMER_CHANNEL_ID</code> points to a channel the bot can see. The console will show connection status.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">"application error" when using commands<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Restart the bot. If it continues, check the console for the actual error — it will show a stack trace. Common causes: missing settings fields or network timeouts.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Slash commands not showing up<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content"><p>Commands register instantly on your server. If they don't appear, re-invite the bot with the <code>applications.commands</code> OAuth2 scope. Type <code>/</code> and wait a moment for Discord to sync.</p></div>
+            </div>
+            <div class="guide-accordion fade-in">
+                <button class="guide-accordion-btn" onclick="toggleGuideAcc(this)">Bot crashed or not responding<span class="arrow">&#9660;</span></button>
+                <div class="guide-accordion-content">
+                    <p>Check the console for clues. Common causes:</p>
+                    <ul>
+                        <li>Discord API rate limiting — the bot reconnects automatically</li>
+                        <li>Kick WebSocket disconnect — auto-reconnects after 10 seconds</li>
+                        <li>Invalid JSON in config files — validate with a JSON checker</li>
+                        <li>RAM usage — the bot uses ~100 MB under normal load</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <div class="guide-footer">
+            <p>Claims Casino Automation &copy; &middot; <a href="index.html">claimscasino.com</a></p>
+        </div>
+
+    </div>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="authModal">
+    <div class="modal auth-modal">
+        <button class="modal-close" id="authModalClose">&times;</button>
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-auth-form="login">Sign In</button>
+            <button class="auth-tab" data-auth-form="register">Register</button>
+        </div>
+        <div class="auth-form active" id="authLoginForm">
+            <div class="auth-form-icon"><i class="fas fa-sign-in-alt"></i></div>
+            <h3>Welcome Back</h3>
+            <p class="auth-subtitle">Sign in to access the dashboard.</p>
+            <div class="form-group">
+                <label for="authLoginEmail">Email or Username</label>
+                <input type="text" id="authLoginEmail" placeholder="you@example.com" class="auth-input" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="authLoginPassword">Password</label>
+                <input type="password" id="authLoginPassword" placeholder="Enter your password" class="auth-input" autocomplete="current-password">
+            </div>
+            <div class="auth-msg" id="authLoginMsg"></div>
+            <button class="btn btn-primary btn-lg auth-submit" id="authLoginBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        </div>
+        <div class="auth-form" id="authRegisterForm" style="display:none">
+            <div class="auth-form-icon"><i class="fas fa-user-plus"></i></div>
+            <h3>Create Account</h3>
+            <p class="auth-subtitle">Join Claims Casino today.</p>
+            <div class="form-group">
+                <label for="authRegisterUsername">Username</label>
+                <input type="text" id="authRegisterUsername" placeholder="Choose a username" class="auth-input" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="authRegisterEmail">Email Address</label>
+                <input type="email" id="authRegisterEmail" placeholder="you@example.com" class="auth-input" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="authRegisterPassword">Password</label>
+                <input type="password" id="authRegisterPassword" placeholder="Create a password (min 6 chars)" class="auth-input" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label for="authRegisterConfirm">Confirm Password</label>
+                <input type="password" id="authRegisterConfirm" placeholder="Confirm your password" class="auth-input" autocomplete="new-password">
+            </div>
+            <label class="auth-tos">
+                <input type="checkbox" id="authRegisterToS" class="auth-tos-checkbox">
+                <span class="auth-tos-checkmark"></span>
+                <span class="auth-tos-text">I agree to the <a href="faq.html">Terms of Service</a></span>
+            </label>
+            <div class="auth-msg" id="authRegisterMsg"></div>
+            <button class="btn btn-primary btn-lg auth-submit" id="authRegisterBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/ScrollTrigger.min.js"></script>
+<script src="script.js"></script>
+
+<script>
+function toggleGuideAcc(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+}
+
+// Sidebar toggle
+var guideHamburger = document.getElementById('guideHamburger');
+var guideSidebar = document.getElementById('guideSidebar');
+var guideOverlay = document.getElementById('guideOverlay');
+
+guideHamburger.addEventListener('click', function() {
+    guideSidebar.classList.toggle('open');
+    guideOverlay.classList.toggle('open');
+});
+guideOverlay.addEventListener('click', function() {
+    guideSidebar.classList.remove('open');
+    guideOverlay.classList.remove('open');
+});
+
+// Close sidebar on nav click (mobile)
+document.querySelectorAll('.guide-sidebar nav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+        if (window.innerWidth <= 900) {
+            guideSidebar.classList.remove('open');
+            guideOverlay.classList.remove('open');
+        }
+    });
+});
+
+// Active section highlight
+var guideSections = document.querySelectorAll('.guide-main section[id]');
+var guideNavLinks = document.querySelectorAll('.guide-sidebar nav a');
+var guideObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+            guideNavLinks.forEach(function(link) {
+                link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+            });
+        }
+    });
+}, { rootMargin: '-80px 0px -60% 0px' });
+guideSections.forEach(function(s) { guideObserver.observe(s); });
+
+// Fade-in on scroll
+var guideFadeObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+        if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-in').forEach(function(el) { guideFadeObserver.observe(el); });
+</script>
+
+</body>
+</html>

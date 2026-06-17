@@ -87,78 +87,87 @@ function resetAuthForms() {
 }
 
 function handleLogin() {
-    const discord = $('#authLoginDiscord'), password = $('#authLoginPassword'), tos = $('#authLoginToS'), msg = $('#authLoginMsg');
-    if (!discord || !password || !tos || !msg) return;
-    const d = discord.value.trim(), p = password.value.trim();
-    if (!d || !p) { msg.textContent = 'Please fill in all fields.'; msg.style.display = 'block'; return; }
-    if (!tos.checked) { msg.textContent = 'You must agree to the Terms of Service.'; msg.style.display = 'block'; return; }
-    const user = USERS[d];
-    if (user) {
-        const expectedPw = d === "953177450391683082" ? "G@@gle080808!!" : "casino";
-        if (p !== expectedPw) { msg.textContent = 'Invalid credentials.'; msg.style.display = 'block'; return; }
-        setDiscordId(d);
-        localStorage.setItem(CUSTOMER_LS_KEY, user.license);
-        localStorage.setItem('display_name', user.name);
-        if (user.admin) { localStorage.setItem(ADMIN_LS_KEY, 'true'); } else { localStorage.removeItem(ADMIN_LS_KEY); }
+    var loginEl = $('#authLoginEmail'), passwordEl = $('#authLoginPassword'), msg = $('#authLoginMsg');
+    if (!loginEl || !passwordEl || !msg) return;
+    var login = loginEl.value.trim(), password = passwordEl.value.trim();
+    if (!login || !password) { msg.textContent = 'Please fill in all fields.'; msg.style.display = 'block'; return; }
+    msg.style.display = 'none';
+    fetch(API_BASE_URL + '/api/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: login, password: password })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.ok) { msg.textContent = data.error || 'Login failed.'; msg.style.display = 'block'; return; }
+        localStorage.setItem(CUSTOMER_LS_KEY, 'true');
+        localStorage.setItem('display_name', data.user.username);
+        localStorage.setItem('user_email', data.user.email);
         if (!localStorage.getItem('member_since')) localStorage.setItem('member_since', Date.now().toString());
         localStorage.setItem('last_login', Date.now().toString());
+        localStorage.setItem('logged_in', 'true');
         updateNavAuth();
-        discord.value = ''; password.value = ''; tos.checked = false; msg.style.display = 'none';
+        loginEl.value = ''; passwordEl.value = ''; msg.style.display = 'none';
         closeAuthModal();
         if (page === 'dashboard.html') initDashboard();
-        return;
-    }
-    setDiscordId(d);
-    localStorage.setItem(CUSTOMER_LS_KEY, d);
-    localStorage.setItem('display_name', d);
-    if (!localStorage.getItem('member_since')) localStorage.setItem('member_since', Date.now().toString());
-    localStorage.setItem('last_login', Date.now().toString());
-    updateNavAuth();
-    discord.value = ''; password.value = ''; tos.checked = false; msg.style.display = 'none';
-    closeAuthModal();
-    if (page === 'dashboard.html') initDashboard();
+    }).catch(function() {
+        msg.textContent = 'Server error. Try again later.'; msg.style.display = 'block';
+    });
 }
 
 function handleRegister() {
-    const email = $('#authRegisterEmail'), discord = $('#authRegisterDiscord'), password = $('#authRegisterPassword');
-    const confirm = $('#authRegisterConfirm'), tos = $('#authRegisterToS'), msg = $('#authRegisterMsg');
-    if (!email || !discord || !password || !confirm || !tos || !msg) return;
-    const e = email.value.trim(), d = discord.value.trim(), p = password.value.trim(), c = confirm.value.trim();
-    if (!e || !d || !p || !c) { msg.textContent = 'Please fill in all fields.'; msg.style.display = 'block'; return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { msg.textContent = 'Please enter a valid email.'; msg.style.display = 'block'; return; }
-    if (p.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.style.display = 'block'; return; }
-    if (p !== c) { msg.textContent = 'Passwords do not match.'; msg.style.display = 'block'; return; }
+    var usernameEl = $('#authRegisterUsername'), emailEl = $('#authRegisterEmail');
+    var passwordEl = $('#authRegisterPassword'), confirmEl = $('#authRegisterConfirm');
+    var tos = $('#authRegisterToS'), msg = $('#authRegisterMsg');
+    if (!usernameEl || !emailEl || !passwordEl || !confirmEl || !tos || !msg) return;
+    var username = usernameEl.value.trim(), email = emailEl.value.trim();
+    var password = passwordEl.value.trim(), confirm = confirmEl.value.trim();
+    if (!username || !email || !password || !confirm) { msg.textContent = 'Please fill in all fields.'; msg.style.display = 'block'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Please enter a valid email.'; msg.style.display = 'block'; return; }
+    if (password.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.style.display = 'block'; return; }
+    if (password !== confirm) { msg.textContent = 'Passwords do not match.'; msg.style.display = 'block'; return; }
     if (!tos.checked) { msg.textContent = 'You must agree to the Terms of Service.'; msg.style.display = 'block'; return; }
-    if (USERS[d]) { msg.textContent = 'This Discord ID is already registered.'; msg.style.color = '#ef4444'; msg.style.display = 'block'; return; }
     msg.style.display = 'none';
-    fetch(API_BASE_URL + '/api/waitlist-apply', {
+    fetch(API_BASE_URL + '/api/auth/signup', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: e, discord: d, password: p, type: 'registration' })
-    }).then(r => r.json()).then(data => {
-        msg.style.color = '#22c55e'; msg.textContent = 'Registration submitted! Awaiting admin approval.'; msg.style.display = 'block';
-        let pc = 0;
-        const poll = setInterval(() => {
-            pc++;
-            fetch(API_BASE_URL + '/api/check-approval?discord=' + encodeURIComponent(d))
-                .then(r => r.json()).then(d2 => {
-                    if (d2.approved) {
-                        clearInterval(poll); setDiscordId(d);
-                        localStorage.setItem('approved_to_purchase', 'true');
-                        msg.style.color = '#22c55e'; msg.textContent = 'Approved! Go to Plans to purchase your membership.'; msg.style.display = 'block';
-                    }
-                }).catch(() => {});
-            if (pc > 120) clearInterval(poll);
-        }, 5000);
-    }).catch(() => { msg.style.color = '#ef4444'; msg.textContent = 'Server error. Try again later.'; msg.style.display = 'block'; });
+        body: JSON.stringify({ username: username, email: email, password: password })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.ok) { msg.textContent = data.error || 'Registration failed.'; msg.style.display = 'block'; return; }
+        localStorage.setItem(CUSTOMER_LS_KEY, 'true');
+        localStorage.setItem('display_name', data.user.username);
+        localStorage.setItem('user_email', data.user.email);
+        if (!localStorage.getItem('member_since')) localStorage.setItem('member_since', Date.now().toString());
+        localStorage.setItem('last_login', Date.now().toString());
+        localStorage.setItem('logged_in', 'true');
+        updateNavAuth();
+        msg.style.color = '#22c55e'; msg.textContent = 'Account created! Welcome to Claims Casino.'; msg.style.display = 'block';
+        setTimeout(function() { closeAuthModal(); }, 1500);
+    }).catch(function() {
+        msg.textContent = 'Server error. Try again later.'; msg.style.display = 'block';
+    });
 }
 
 function handleLogout() {
+    fetch(API_BASE_URL + '/api/auth/logout', { method: 'POST' }).catch(function() {});
     var ak = getAvatarKey();
     localStorage.removeItem(CUSTOMER_LS_KEY); localStorage.removeItem(USER_LS_KEY); localStorage.removeItem(ADMIN_LS_KEY);
-    localStorage.removeItem('display_name'); localStorage.removeItem(ak);
+    localStorage.removeItem('display_name'); localStorage.removeItem('user_email'); localStorage.removeItem('logged_in');
+    localStorage.removeItem(ak);
     updateNavAuth();
     if (page === 'dashboard.html' || page === 'profile.html') window.location.href = 'index.html';
 }
+
+// Check session on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (!localStorage.getItem('logged_in')) {
+        fetch(API_BASE_URL + '/api/auth/me').then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) {
+                localStorage.setItem(CUSTOMER_LS_KEY, 'true');
+                localStorage.setItem('display_name', data.user.username);
+                localStorage.setItem('user_email', data.user.email);
+                localStorage.setItem('logged_in', 'true');
+                updateNavAuth();
+            }
+        }).catch(function() {});
+    }
+});
 
 document.addEventListener('keydown', function(ev) {
     if (ev.key === 'Escape') {
