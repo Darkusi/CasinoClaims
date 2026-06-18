@@ -62,6 +62,7 @@
         .crypto-icon-eth { color: #627eea; }
         .crypto-icon-trx { color: #ef0027; }
         .crypto-icon-sol { color: #9945ff; }
+        .crypto-icon-usdc { color: #2775ca; }
         .crypto-icon { font-size: 1.4rem; width: 28px; text-align: center; flex-shrink: 0; }
         @media (max-width: 768px) {
             .cart-layout { flex-direction: column; align-items: center; }
@@ -153,6 +154,7 @@
                             <div class="payment-option" data-currency="ETH"><i class="fab fa-ethereum crypto-icon-eth crypto-icon"></i> USDT ERC20</div>
                             <div class="payment-option" data-currency="TRX"><i class="fas fa-bolt crypto-icon-trx crypto-icon"></i> USDT TRC20</div>
                             <div class="payment-option" data-currency="SOL"><i class="fas fa-circle crypto-icon-sol crypto-icon"></i> Solana</div>
+                            <div class="payment-option" data-currency="USDC"><i class="fas fa-dollar-sign crypto-icon-usdc crypto-icon"></i> USDC</div>
                         </div>
                         <button class="generate-btn" id="generateInvoiceBtn"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
                         <div class="invoice-loading" id="invoiceLoading"><div class="spinner"></div> Generating secure address...</div>
@@ -359,6 +361,7 @@ function generateCryptoAddress(currency) {
         case 'ETH': return generateETHAddress();
         case 'TRX': return generateTRXAddress();
         case 'SOL': return generateSOLAddress();
+        case 'USDC': return generateETHAddress();
         default: return generateBTCAddress();
     }
 }

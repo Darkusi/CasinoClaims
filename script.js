@@ -712,19 +712,25 @@ function initScrollAnimations() {
         var tl = gsap.timeline({
             scrollTrigger: {
                 trigger: trigger,
-                start: 'top 70%',
-                end: 'bottom 30%',
+                start: 'top 75%',
+                end: 'bottom 25%',
                 toggleActions: 'play none none none'
             }
         });
         tl.from(chars, {
-            duration: 0.6,
-            y: '50%',
+            duration: 0.8,
+            y: '70%',
             opacity: 0,
-            rotationX: -90,
-            ease: 'power1.out',
-            stagger: { amount: 0.6, from: 'start' }
+            rotationX: -120,
+            scale: 0.6,
+            filter: 'blur(6px)',
+            ease: 'power3.out',
+            stagger: { amount: 0.7, from: 'start' }
         });
+        tl.to(trigger, {
+            textShadow: '0 0 30px rgba(168,85,247,0.08)',
+            duration: 0.3
+        }, '-=0.1');
     });
 
     // Animate words on scroll
@@ -747,6 +753,25 @@ function initScrollAnimations() {
             stagger: { amount: 0.5, from: 'start' }
         });
     });
+
+    // Chip flip on scroll
+    var chip = document.querySelector('.hero-chip');
+    if (chip) {
+        var flipper = chip.querySelector('.chip-flipper');
+        if (flipper) {
+            gsap.to(flipper, {
+                rotationY: 0,
+                duration: 1.4,
+                ease: 'power3.inOut',
+                scrollTrigger: {
+                    trigger: chip,
+                    start: 'top 85%',
+                    end: 'bottom 60%',
+                    toggleActions: 'play none none none'
+                }
+            });
+        }
+    }
 }
 
 /* ── Scroll Progress Bar ── */
@@ -798,6 +823,12 @@ function initCarousel(wrapId) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Inject mist overlay
+    if (!document.querySelector('.mist-overlay')) {
+        var mist = document.createElement('div');
+        mist.className = 'mist-overlay';
+        document.body.appendChild(mist);
+    }
     initCarousel('supportedCarousel');
     initCarousel('testimonialsCarousel');
     initScrollAnimations();

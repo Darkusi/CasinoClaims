@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Claims Casino</title>
+    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 80px); gap: 24px; padding: 24px 0; }
+        .admin-sidebar {
+            width: 260px; flex-shrink: 0;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            align-self: flex-start;
+            position: sticky; top: 90px;
+            display: flex; flex-direction: column; min-height: 400px;
+        }
+        .admin-sidebar h3 {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--text-muted); margin-bottom: 12px; padding: 0 8px;
+        }
+        .admin-nav-item {
+            padding: 10px 12px;
+            color: var(--text); cursor: pointer; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 500; margin-bottom: 2px;
+            transition: all 0.15s;
+        }
+        .admin-nav-item:hover { background: rgba(168,85,247,0.08); color: var(--text-bright); }
+        .admin-nav-item.active { background: rgba(168,85,247,0.15); color: var(--primary); }
+        .admin-nav-item i { width: 20px; text-align: center; margin-right: 8px; }
+        .admin-sidebar-spacer { flex: 1; }
+        .admin-sidebar-footer {
+            padding: 16px 8px 0; margin-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .admin-sidebar-footer .admin-nav-item { font-size: 0.8rem; }
+        .admin-main { flex: 1; min-width: 0; }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+        .admin-panel h2 { font-size: 1.3rem; font-weight: 700; color: var(--text-bright); margin-bottom: 20px; }
+        .stats-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-box {
+            flex: 1; min-width: 140px;
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px 20px; text-align: center;
+        }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+        .stat-label { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; }
+        .monitor-table { width: 100%; border-collapse: collapse; }
+        .monitor-table th {
+            text-align: left; padding: 10px 14px;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-muted); border-bottom: 1px solid var(--border);
+        }
+        .monitor-table td {
+            padding: 10px 14px; font-size: 0.85rem;
+            border-bottom: 1px solid var(--border); color: var(--text);
+        }
+        .monitor-table tr:hover td { background: rgba(168,85,247,0.04); }
+        .monitor-table .dot-online {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #22c55e; margin-right: 6px; box-shadow: 0 0 6px rgba(34,197,94,0.4);
+        }
+        .monitor-table .dot-offline {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #555; margin-right: 6px;
+        }
+        .applicant-card {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px 18px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        }
+        .applicant-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+        .applicant-name { font-weight: 600; color: var(--text-bright); font-size: 0.9rem; }
+        .applicant-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .applicant-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #fff; flex-shrink: 0; }
+        .applicant-actions { display: flex; gap: 6px; }
+        .btn-sm { padding: 6px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.75rem; transition: all 0.15s; }
+        .btn-approve { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .btn-approve:hover { background: rgba(34,197,94,0.25); }
+        .btn-decline { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .btn-decline:hover { background: rgba(239,68,68,0.25); }
+        .btn-generate {
+            padding: 8px 18px; background: var(--primary); border: none;
+            border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-generate:hover { opacity: 0.9; }
+        .license-form {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; margin-bottom: 24px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .license-form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+        .license-form-group { display: flex; flex-direction: column; gap: 4px; }
+        .license-form-group label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .license-form-group input, .license-form-group select, .license-form-group textarea {
+            padding: 8px 12px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.85rem;
+        }
+        .license-form-group textarea { resize: vertical; min-height: 36px; }
+        .license-form-group input:focus, .license-form-group select:focus, .license-form-group textarea:focus { border-color: var(--primary); outline: none; }
+        .key-item {
+            padding: 10px 16px; background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 10px; margin-bottom: 6px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .key-item .key-code { font-family: monospace; font-size: 0.9rem; color: var(--primary); letter-spacing: 1px; display: flex; align-items: center; gap: 4px; }
+        .key-item .key-code .key-masked { letter-spacing: 2px; }
+        .key-item .key-code .key-visible { letter-spacing: 1px; word-break: break-all; }
+        .key-visibility-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 4px; font-size: 0.8rem; transition: color 0.15s; display: inline-flex; align-items: center; }
+        .key-visibility-btn:hover { color: var(--text-bright); }
+        .key-item .key-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .key-item .badge-tier { padding: 2px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+        .badge-premium { background: rgba(168,85,247,0.2); color: var(--primary); }
+        .badge-basic { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+        .copied-msg { color: #22c55e; font-size: 0.8rem; display: none; margin-left: 8px; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
+        .restock-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
+        .restock-current { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: var(--text); font-weight: 500; }
+        .restock-count { font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .restock-form { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+        .restock-form-group { display: flex; flex-direction: column; gap: 4px; flex:1; min-width:160px; }
+        .restock-form-group label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .restock-form-group input { padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.85rem; }
+        .restock-form-group input:focus { border-color: var(--primary); outline: none; }
+        .restock-msg { font-size: 0.8rem; color: #22c55e; display: none; }
+        .payments-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .payments-count { font-size: 0.85rem; color: var(--text-muted); }
+        .invoice-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .invoice-info { display: flex; flex-direction: column; gap: 2px; }
+        .invoice-id { font-weight: 600; color: var(--text-bright); font-size: 0.85rem; }
+        .invoice-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .invoice-address { font-family: monospace; font-size: 0.75rem; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 4px; }
+        .invoice-actions { display: flex; gap: 6px; align-items: center; }
+        .invoice-status { padding: 2px 10px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .invoice-status.pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .invoice-status.paid { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .invoice-status.expired { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .invoice-private-key { font-family: monospace; font-size: 0.7rem; color: var(--orange); background: rgba(245,158,11,0.1); padding: 2px 8px; border-radius: 4px; display: none; word-break: break-all; }
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: flex; align-items: center;
+            justify-content: center; z-index: 9999;
+        }
+        .auth-box {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 16px; padding: 36px; max-width: 380px; width: 90%;
+            text-align: center;
+        }
+        .auth-box h2 { font-size: 1.1rem; color: var(--text-bright); margin-bottom: 6px; }
+        .auth-box p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; }
+        .auth-box input {
+            width: 100%; padding: 10px 14px; background: var(--bg);
+            border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text); font-family: inherit; font-size: 0.9rem;
+            box-sizing: border-box; margin-bottom: 14px;
+        }
+        .auth-box input:focus { border-color: var(--primary); outline: none; }
+        .auth-box .auth-msg { font-size: 0.8rem; color: #ef4444; display: none; margin-bottom: 10px; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 0;
+        }
+        .topbar-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.1rem; font-weight: 700; color: var(--text-bright);
+        }
+        .topbar-title i { color: var(--primary); font-size: 1.3rem; }
+        .topbar .profile-icon-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            background: var(--bg-elevated); color: var(--text); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+            transition: all 0.15s;
+        }
+        .topbar .profile-icon-btn:hover { background: rgba(168,85,247,0.1); color: var(--primary); }
+        .tier-select { appearance: none; -webkit-appearance: none; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 32px 8px 12px; font-family: inherit; font-size: 0.85rem; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.15s; }
+        .tier-select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(168,85,247,0.12); }
+        .tier-select option { background: var(--bg-elevated); color: var(--text); }
+        .redirect-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,10,10,0.92); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 99999; flex-direction: column; gap: 24px; }
+        .redirect-overlay.active { display: flex; }
+        .redirect-overlay .cog-icon { font-size: 3.5rem; color: var(--primary); animation: spin 1.2s linear infinite; filter: drop-shadow(0 0 20px rgba(168,85,247,0.3)); }
+        .redirect-overlay .redirect-text { font-size: 1.1rem; color: var(--text); font-weight: 500; }
+        .redirect-overlay .redirect-sub { font-size: 0.85rem; color: var(--text-muted); }
+        .admin-settings-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .admin-settings-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; color: var(--text-bright); }
+        .admin-settings-card .card-desc { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px; }
+        .admin-settings-card .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; gap: 12px; flex-wrap: wrap; }
+        .admin-settings-card .setting-row label { font-size: 0.8rem; color: var(--text-muted); min-width: 120px; }
+        .admin-settings-card .setting-row input, .admin-settings-card .setting-row select { padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.82rem; flex: 1; min-width: 140px; }
+        .admin-settings-card .setting-row input:focus, .admin-settings-card .setting-row select:focus { border-color: var(--primary); outline: none; }
+        .admin-settings-card .setting-msg { font-size: 0.75rem; color: #22c55e; display: none; }
+        .admin-settings-card hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+        .lookup-result { padding: 12px; background: var(--bg); border-radius: 8px; font-size: 0.82rem; margin-top: 8px; }
+        .admin-settings-card .danger-btn { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: all 0.15s; }
+        .admin-settings-card .danger-btn:hover { background: rgba(239,68,68,0.2); }
+        .admin-settings-card .btn-save { background: var(--primary); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+        .admin-settings-card .btn-save:hover { opacity: 0.9; }
+        .badge-tier-staff { background: rgba(59,130,246,0.2); color: #3b82f6; }
+        .license-success-frame { background: rgba(34,197,94,0.08); border: 2px solid #22c55e; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: none; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .license-success-frame .lsf-key { font-family: monospace; font-size: 1.1rem; color: #22c55e; letter-spacing: 2px; font-weight: 700; flex: 1; }
+        .license-success-frame .lsf-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .license-success-frame .lsf-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 4px; }
+        .license-success-frame .lsf-close:hover { color: var(--text-bright); }
+        .confirm-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 100000; }
+        .confirm-modal-overlay.active { display: flex; }
+        .confirm-modal-box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; padding: 30px 32px; max-width: 420px; width: 90%; text-align: center; }
+        .confirm-modal-box h3 { font-size: 1.05rem; color: var(--text-bright); margin-bottom: 8px; }
+        .confirm-modal-box p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+        .confirm-modal-box .confirm-tier-badge { display: inline-block; padding: 4px 14px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin: 10px 0 16px; }
+        .confirm-modal-box .confirm-modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .confirm-modal-box .btn-cancel { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.15s; }
+        .confirm-modal-box .btn-cancel:hover { background: rgba(239,68,68,0.2); }
+        .confirm-modal-box .btn-confirm { background: var(--primary); border: none; color: #fff; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.15s; }
+        .confirm-modal-box .btn-confirm:hover { opacity: 0.9; }
+        .payment-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: -4px; margin-bottom: 4px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="auth-overlay" id="adminAuthOverlay">
+    <div class="auth-box">
+        <h2><i class="fas fa-shield-alt"></i> Admin Access</h2>
+        <p>Enter the admin key to access this panel.</p>
+        <input type="password" id="adminKeyInput" placeholder="Admin key" autocomplete="off">
+        <div class="auth-msg" id="adminAuthMsg"></div>
+        <button class="btn btn-primary btn-lg" id="adminAuthBtn" style="width:100%">Unlock</button>
+    </div>
+</div>
+
+<div class="redirect-overlay" id="redirectOverlay">
+    <div class="cog-icon"><i class="fas fa-cog"></i></div>
+    <div class="redirect-text" id="redirectText">Loading...</div>
+    <div class="redirect-sub" id="redirectSub">Please wait while we prepare your destination.</div>
+</div>
+
+<div class="confirm-modal-overlay" id="confirmModalOverlay">
+    <div class="confirm-modal-box">
+        <h3><i class="fas fa-key"></i> Confirm License Creation</h3>
+        <p>You are about to create a new license key.</p>
+        <div class="confirm-tier-badge" id="confirmTierBadge" style="background:rgba(168,85,247,0.2);color:var(--primary)">PREMIUM</div>
+        <p style="font-size:0.78rem;color:var(--text-muted)">This action will generate a new key immediately.</p>
+        <div class="confirm-modal-actions">
+            <button class="btn-cancel" id="confirmModalCancel">Cancel</button>
+            <button class="btn-confirm" id="confirmModalConfirm"><i class="fas fa-check"></i> Create License</button>
+        </div>
+    </div>
+</div>
+<div class="container" style="display:flex;flex-direction:column;min-height:100vh">
+    <div class="topbar">
+        <div class="topbar-title"><i class="fas fa-satellite-dish"></i> Claims Casino Administration Dashboard</div>
+        <div class="profile-icon-wrap" style="position:relative">
+            <button class="profile-icon-btn" id="profileIconBtn">
+                <i class="fas fa-user-circle" id="profileIconDefault"></i>
+                <span class="profile-icon-initial" id="profileIconInitial" style="display:none">1</span>
+            </button>
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="dd-user-panel" id="ddUserPanel" style="display:none">
+                    <a href="profile.html" class="profile-dropdown-item redirect-link" data-target="profile.html"><i class="fas fa-user"></i> Profile</a>
+                    <a href="admin-dashboard.html" class="profile-dropdown-item" id="ddAdmin" data-admin="required"><i class="fas fa-shield-alt"></i> Admin</a>
+                    <div class="profile-dropdown-divider"></div>
+                    <button class="profile-dropdown-item danger" id="ddLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-layout" style="padding-top:16px;flex:1">
+        <div class="admin-sidebar">
+            <h3>Admin Panel</h3>
+            <div class="admin-nav-item active" data-section="dashboard"><i class="fas fa-chart-bar"></i> Dashboard</div>
+            <div class="admin-nav-item" data-section="monitoring"><i class="fas fa-eye"></i> Live Monitoring</div>
+            <div class="admin-nav-item" data-section="applicants"><i class="fas fa-users"></i> Applicants</div>
+            <div class="admin-nav-item" data-section="licenses"><i class="fas fa-key"></i> Licenses</div>
+            <div class="admin-nav-item" data-section="restock"><i class="fas fa-boxes"></i> Restock</div>
+            <div class="admin-nav-item" data-section="payments"><i class="fas fa-coins"></i> Payments</div>
+            <div class="admin-nav-item" data-section="settings"><i class="fas fa-cog"></i> Admin Settings</div>
+            <div class="admin-sidebar-spacer"></div>
+            <div class="admin-sidebar-footer">
+                <div class="admin-nav-item redirect-link" data-target="index.html"><i class="fas fa-arrow-left"></i> Back to Site</div>
+            </div>
+        </div>
+        <div class="admin-main">
+            <div class="admin-panel active" id="panel-dashboard">
+                <h2>Dashboard Overview</h2>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-value" id="statUsers">0</div>
+                        <div class="stat-label">Approved Users</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statAlerts">0</div>
+                        <div class="stat-label">Active Alerts</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statSc">0</div>
+                        <div class="stat-label">Total SC Claimed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statOnline">0</div>
+                        <div class="stat-label">Online Now</div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-panel" id="panel-monitoring">
+                <h2>Live Monitoring <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">(auto-refresh 3s)</span></h2>
+                <table class="monitor-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Name</th>
+                            <th>Current Page</th>
+                            <th>Last Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitorBody">
+                        <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="admin-panel" id="panel-applicants">
+                <h2>Waitlist Applicants</h2>
+                <div id="applicantsList"></div>
+            </div>
+            <div class="admin-panel" id="panel-licenses">
+                <h2>License Keys</h2>
+                <div class="license-form">
+                    <div class="license-form-row">
+                        <div class="license-form-group" style="flex:1">
+                            <label>License Key (leave blank to auto-generate)</label>
+                            <input type="text" id="licenseKeyInput" placeholder="XXXX-XXXX-XXXX-XXXX">
+                        </div>
+                        <div class="license-form-group">
+                            <label>Tier</label>
+                            <select id="tierSelect" class="tier-select">
+                                <option value="premium">Premium</option>
+                                <option value="staff">Staff</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="license-form-row">
+                        <div class="license-form-group" style="flex:1">
+                            <label>Assigned To (Discord ID)</label>
+                            <input type="text" id="licenseAssignedInput" placeholder="Discord ID">
+                        </div>
+                        <div class="license-form-group" style="flex:2">
+                            <label>Notes</label>
+                            <input type="text" id="licenseNotesInput" placeholder="Optional notes">
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <button class="btn-generate" onclick="generateLicense()"><i class="fas fa-plus"></i> Create License</button>
+                        <span class="copied-msg" id="copiedMsg">Copied to clipboard!</span>
+                    </div>
+                </div>
+                <div class="license-success-frame" id="licenseSuccessFrame">
+                    <div>
+                        <div class="lsf-label"><i class="fas fa-check-circle" style="color:#22c55e"></i> Key Generated — Sign-in Credentials</div>
+                        <div class="lsf-key" id="licenseSuccessKey"></div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Discord ID: <span id="licenseSuccessDiscord" style="color:var(--text-bright);font-family:monospace">—</span></div>
+                    </div>
+                    <button class="btn-sm btn-approve" onclick="copyGeneratedKey()"><i class="fas fa-copy"></i> Copy Key</button>
+                    <button class="lsf-close" onclick="document.getElementById('licenseSuccessFrame').style.display='none'"><i class="fas fa-times"></i></button>
+                </div>
+                <h3 style="font-size:0.85rem;font-weight:600;color:var(--text-muted);margin-bottom:12px">All License Keys</h3>
+                <div id="licenseList"></div>
+            </div>
+
+            <div class="admin-panel" id="panel-restock">
+                <h2><i class="fas fa-boxes"></i> Restock Membership</h2>
+                <div class="restock-card">
+                    <div class="restock-current">
+                        <span>Current Stock</span>
+                        <span class="restock-count" id="restockCurrentCount">0</span>
+                    </div>
+                    <div class="restock-form">
+                        <div class="restock-form-group">
+                            <label>Set Available Spots</label>
+                            <input type="number" id="restockInput" min="0" max="999" value="10" placeholder="Number of spots">
+                        </div>
+                        <button class="btn-generate" onclick="restockMemberships()"><i class="fas fa-arrow-up"></i> Restock</button>
+                        <button class="btn-sm btn-decline" onclick="restockMemberships(0)"><i class="fas fa-times"></i> Set to Sold Out</button>
+                    </div>
+                    <div class="restock-msg" id="restockMsg"></div>
+                </div>
+                <h3 style="font-size:0.85rem;font-weight:600;color:var(--text-muted);margin-bottom:12px">Restock History</h3>
+                <div id="restockHistory"><div class="empty-state">No restock history yet.</div></div>
+            </div>
+
+            <div class="admin-panel" id="panel-payments">
+                <h2><i class="fas fa-coins"></i> Payment Invoices</h2>
+                <div class="payments-toolbar">
+                    <span class="payments-count" id="paymentsCount">0 invoices</span>
+                    <button class="btn-generate btn-sm" onclick="refreshPayments()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                <div id="paymentsList"><div class="empty-state">Loading invoices...</div></div>
+            </div>
+
+            <div class="admin-panel" id="panel-settings">
+                <h2><i class="fas fa-cog"></i> Admin Settings</h2>
+
+                <div class="admin-settings-card">
+                    <h3><i class="fas fa-key"></i> Admin Key</h3>
+                    <p class="card-desc">Your authentication key for API access.</p>
+                    <div class="setting-row">
+                        <label>Current Key</label>
+                        <input type="text" id="adminKeyDisplay" value="A1B2-C3D4-E5F6-G7H8" readonly style="font-family:monospace;letter-spacing:1px;color:var(--primary);opacity:0.8">
+                        <button class="btn-save" onclick="copyAdminKey()"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                    <div class="setting-row">
+                        <label>New Key</label>
+                        <input type="text" id="newAdminKeyInput" placeholder="Enter new key" style="font-family:monospace">
+                        <button class="btn-save" onclick="changeAdminKey()"><i class="fas fa-save"></i> Update</button>
+                    </div>
+                    <div class="setting-msg" id="adminKeyMsg"></div>
+                </div>
+
+                <div class="admin-settings-card">
+                    <h3><i class="fas fa-globe"></i> Site Configuration</h3>
+                    <p class="card-desc">General site branding and contact info.</p>
+                    <div class="setting-row">
+                        <label>Site Name</label>
+                        <input type="text" id="admSiteName" value="Claims Casino">
+                        <button class="btn-save" onclick="saveAdmSite()"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="setting-row">
+                        <label>Support Email</label>
+                        <input type="email" id="admSupportEmail" value="support@claimscasino.com">
+                        <button class="btn-save" onclick="saveAdmSite()"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="setting-msg" id="admSiteMsg"></div>
+                </div>
+
+                <div class="admin-settings-card">
+                    <h3><i class="fas fa-dollar-sign"></i> Payment</h3>
+                    <p class="card-desc">Default pricing, currency, and your receive address.</p>
+                    <div class="setting-row">
+                        <label>Price (USD)</label>
+                        <input type="number" id="admPrice" value="299" min="0">
+                        <button class="btn-save" onclick="saveAdmPayment()"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="setting-row">
+                        <label>Currency</label>
+                        <select id="admCurrency" onchange="updatePaymentHint()">
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">USDT ERC20</option>
+                            <option value="TRX">USDT TRC20</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="USDC">USDC</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label>Your Address</label>
+                        <input type="text" id="admReceiveAddress" placeholder="Enter your BTC address (starts with 1, 3, or bc1)">
+                        <button class="btn-save" onclick="saveAdmPayment()"><i class="fas fa-save"></i></button>
+                    </div>
+                    <div class="payment-hint" id="paymentHint">BTC addresses start with 1, 3, or bc1</div>
+                    <div class="setting-msg" id="admPayMsg"></div>
+                </div>
+
+                <div class="admin-settings-card">
+                    <h3><i class="fas fa-users"></i> Member Lookup</h3>
+                    <p class="card-desc">Quick search by Discord ID.</p>
+                    <div class="setting-row">
+                        <input type="text" id="memberLookupInput" placeholder="Enter Discord ID">
+                        <button class="btn-save" onclick="lookupMember()"><i class="fas fa-search"></i> Lookup</button>
+                    </div>
+                    <div id="memberLookupResult" class="lookup-result" style="display:none"></div>
+                </div>
+
+                <div class="admin-settings-card" style="border-color:rgba(239,68,68,0.25)">
+                    <h3 style="color:var(--red)"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
+                    <p class="card-desc">Irreversible actions.</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="danger-btn" onclick="resetStock()"><i class="fas fa-box-open"></i> Reset Stock</button>
+                        <button class="danger-btn" onclick="unlimitedStock()"><i class="fas fa-infinity"></i> Unlimited Stock</button>
+                    </div>
+                    <div class="setting-msg" id="dangerZoneMsg" style="margin-top:8px"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var API_URL = 'http://localhost:5001';
+var ADMIN_KEY = "A1B2-C3D4-E5F6-G7H8";
+var CUSTOMER_LS_KEY = 'sweepstakes_user';
+var USER_LS_KEY = 'discord_user';
+var ADMIN_LS_KEY = 'sweepstakes_is_admin';
+var USERS = {
+    "953177450391683082": { name: "Glow",     license: "8K3X-M9P1-Q2R7-V5N2", admin: true },
+    "695697021868310669": { name: "andyttc",  license: "J4W6-B8T2-C1D9-F3H5", admin: false },
+    "186105992252096512": { name: "Nazistu",  license: "A7S3-D5F6-G8H2-J9K4", admin: false },
+    "222898514789662721": { name: "No Leg Leny", license: "L1Q2-W3E4-R5T6-Y7U8", admin: false },
+    "741378521460637773": { name: "pxsymbol", license: "Z9X8-C7V6-B5N4-M3L2", admin: false },
+    "1389284552442253352": { name: "Braeden Nigley", license: "P1O2-I3U4-Y5T6-R7E8", admin: false }
+};
+
+var adminGranted = false;
+
+function apiHeaders(extra) {
+    var h = { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY };
+    if (extra) { for (var k in extra) h[k] = extra[k]; }
+    return h;
+}
+
+function checkAdminAccess() {
+    if (localStorage.getItem(ADMIN_LS_KEY) === 'true') { adminGranted = true; return true; }
+    var did = localStorage.getItem(USER_LS_KEY);
+    if (did && USERS[did] && USERS[did].admin) { adminGranted = true; return true; }
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var $ = function(s, p) { return (p || document).querySelector(s); };
+    var $$ = function(s, p) { return [].slice.call((p || document).querySelectorAll(s)); };
+    var page = window.location.pathname.split('/').pop() || 'admin-dashboard.html';
+
+    var savedAdminKey = localStorage.getItem('adm_admin_key');
+    if (savedAdminKey) ADMIN_KEY = savedAdminKey;
+
+    // ── Clipboard utility with fallback for non-HTTPS ──
+    function copyToClipboard(text, msgEl, successText) {
+        var done = function() {
+            if (msgEl) { msgEl.textContent = successText || 'Copied!'; msgEl.style.color = '#22c55e'; msgEl.style.display = 'block'; setTimeout(function() { msgEl.style.display = 'none'; }, 2500); }
+        };
+        var fail = function() {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); } catch (e) { if (msgEl) { msgEl.textContent = 'Copy manually: ' + text; msgEl.style.color = '#f59e0b'; msgEl.style.display = 'block'; } }
+            document.body.removeChild(ta);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done).catch(fail); } else { fail(); }
+    }
+
+    window.updatePaymentHint = function() {
+        var curr = document.getElementById('admCurrency').value;
+        var hint = document.getElementById('paymentHint');
+        var hints = {
+            'BTC': 'BTC addresses start with 1, 3, or bc1',
+            'ETH': 'ETH addresses start with 0x (42 characters)',
+            'TRX': 'TRX addresses start with T (base58, ~34 characters)',
+            'SOL': 'SOL addresses are base58 (32-44 characters)'
+        };
+        hint.textContent = hints[curr] || 'Enter your receive address';
+        var placeholders = {
+            'BTC': 'Enter your BTC address (starts with 1, 3, or bc1)',
+            'ETH': 'Enter your ETH address (starts with 0x)',
+            'TRX': 'Enter your TRX address (starts with T)',
+            'SOL': 'Enter your SOL address (base58)'
+        };
+        var addrInput = document.getElementById('admReceiveAddress');
+        if (addrInput) addrInput.placeholder = placeholders[curr] || 'Enter your receive address for this currency';
+    };
+
+    if (!checkAdminAccess()) {
+        $('#adminAuthOverlay').style.display = 'flex';
+    } else {
+        $('#adminAuthOverlay').style.display = 'none';
+        adminGranted = true;
+        initAdmin();
+    }
+
+    $('#adminAuthBtn').addEventListener('click', function() {
+        var pw = $('#adminKeyInput').value.trim();
+        if (pw === ADMIN_KEY || pw === localStorage.getItem('adm_admin_key')) {
+            localStorage.setItem(ADMIN_LS_KEY, 'true');
+            adminGranted = true;
+            $('#adminAuthOverlay').style.display = 'none';
+            initAdmin();
+        } else {
+            $('#adminAuthMsg').textContent = 'Invalid admin key.';
+            $('#adminAuthMsg').style.display = 'block';
+        }
+    });
+
+    $('#adminKeyInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') $('#adminAuthBtn').click();
+    });
+
+    // Nav toggle
+    $$('.admin-nav-item[data-section]').forEach(function(item) {
+        item.addEventListener('click', function() {
+            $$('.admin-nav-item[data-section]').forEach(function(n) { n.classList.remove('active'); });
+            item.classList.add('active');
+            $$('.admin-panel').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('panel-' + item.dataset.section).classList.add('active');
+        });
+    });
+
+    // Profile icon
+    var did = localStorage.getItem(USER_LS_KEY);
+    var iconDefault = $('#profileIconDefault');
+    var iconInitial = $('#profileIconInitial');
+    var userPanel = $('#ddUserPanel');
+    if (did) {
+        if (iconDefault) iconDefault.style.display = 'none';
+        if (iconInitial) { iconInitial.style.display = 'flex'; iconInitial.textContent = (localStorage.getItem('display_name') || did).charAt(0).toUpperCase(); }
+        if (userPanel) userPanel.style.display = 'block';
+        var savedAvatar = localStorage.getItem('profile_avatar_' + did);
+        if (savedAvatar && iconInitial) {
+            iconInitial.style.backgroundImage = 'url(' + savedAvatar + ')';
+            iconInitial.style.backgroundSize = 'cover';
+            iconInitial.style.backgroundPosition = 'center';
+            iconInitial.textContent = '';
+        }
+    }
+    $('#profileIconBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var dd = $('#profileDropdown');
+        if (dd) dd.classList.toggle('active');
+    });
+    document.addEventListener('click', function() {
+        var dd = $('#profileDropdown');
+        if (dd) dd.classList.remove('active');
+    });
+
+    // Logout
+    var ddLogout = document.getElementById('ddLogout');
+    if (ddLogout) {
+        ddLogout.addEventListener('click', function() {
+            localStorage.removeItem(CUSTOMER_LS_KEY);
+            localStorage.removeItem(USER_LS_KEY);
+            localStorage.removeItem(ADMIN_LS_KEY);
+            localStorage.removeItem('display_name');
+            window.location.href = 'index.html';
+        });
+    }
+
+    function loadSettings() {
+        var savedKey = localStorage.getItem('adm_admin_key');
+        if (savedKey) { ADMIN_KEY = savedKey; document.getElementById('adminKeyDisplay').value = savedKey; }
+        var name = localStorage.getItem('adm_site_name');
+        if (name) document.getElementById('admSiteName').value = name;
+        var email = localStorage.getItem('adm_support_email');
+        if (email) document.getElementById('admSupportEmail').value = email;
+        var price = localStorage.getItem('adm_price');
+        if (price) document.getElementById('admPrice').value = price;
+        var curr = localStorage.getItem('adm_currency');
+        if (curr) document.getElementById('admCurrency').value = curr;
+        var addr = localStorage.getItem('adm_receive_address');
+        if (addr) document.getElementById('admReceiveAddress').value = addr;
+        updatePaymentHint();
+    }
+
+    function initAdmin() {
+        loadSettings();
+        initConfirmModal();
+        refreshStats();
+        loadMonitoring();
+        loadApplicants();
+        loadLicenses();
+        loadStock();
+        loadPayments();
+        setInterval(refreshStats, 5000);
+        setInterval(loadMonitoring, 3000);
+        setInterval(loadStock, 10000);
+        trackAdminPage();
+    }
+
+    function trackAdminPage() {
+        var did = localStorage.getItem(USER_LS_KEY);
+        if (!did) return;
+        try {
+            fetch(API_URL + '/api/track-page', {
+                method: 'POST',
+                headers: apiHeaders(),
+                body: JSON.stringify({ discord_id: did, page: 'admin-dashboard.html', timestamp: Date.now() })
+            }).catch(function() {});
+        } catch (e) {}
+    }
+
+    function refreshStats() {
+        fetch(API_URL + '/api/admin-stats', { headers: apiHeaders() }).then(function(r) { return r.json(); }).then(function(d) {
+            if ($('#statUsers')) $('#statUsers').textContent = d.users || 0;
+            if ($('#statAlerts')) $('#statAlerts').textContent = d.alerts || 0;
+        }).catch(function() {});
+
+        fetch(API_URL + '/api/data', { headers: apiHeaders() }).then(function(r) { return r.json(); }).then(function(d) {
+            if ($('#statSc')) $('#statSc').textContent = (d.sc_total || 0).toFixed(1);
+        }).catch(function() {});
+
+        fetch(API_URL + '/api/admin-monitor', { headers: apiHeaders() }).then(function(r) { return r.json(); }).then(function(d) {
+            var count = 0;
+            for (var k in d) { if (d.hasOwnProperty(k)) count++; }
+            if ($('#statOnline')) $('#statOnline').textContent = count;
+        }).catch(function() {});
+    }
+
+    function loadMonitoring() {
+        var body = $('#monitorBody');
+        if (!body) return;
+        var now = Date.now();
+        fetch(API_URL + '/api/admin-monitor', { headers: apiHeaders() }).then(function(r) { return r.json(); }).then(function(active) {
+            var rows = [];
+            for (var did in USERS) {
+                if (!USERS.hasOwnProperty(did)) continue;
+                var u = USERS[did];
+                var tracked = active[did];
+                var isOnline = tracked && (now - tracked.last_seen < 30000);
+                var dotClass = isOnline ? 'dot-online' : 'dot-offline';
+                var page = isOnline ? (tracked.page || '—') : '<span style="color:var(--text-muted)">Offline</span>';
+                var time = isOnline ? new Date(tracked.last_seen).toLocaleTimeString() : '—';
+                rows.push('<tr><td><span class="' + dotClass + '"></span></td><td>' + (u.name || did) + '</td><td>' + page + '</td><td>' + time + '</td></tr>');
+            }
+            if (rows.length === 0) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">No users loaded</td></tr>';
+            } else {
+                body.innerHTML = rows.join('');
+            }
+        }).catch(function() {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">Failed to load</td></tr>';
+        });
+    }
+
+    function loadApplicants() {
+        var list = $('#applicantsList');
+        if (!list) return;
+        list.innerHTML = '<div class="empty-state">Loading...</div>';
+        fetch(API_URL + '/api/admin-applicants', { headers: apiHeaders() }).then(function(r) { return r.json(); }).then(function(apps) {
+            if (!apps || apps.length === 0) {
+                list.innerHTML = '<div class="empty-state">No pending applicants.</div>';
+                return;
+            }
+            list.innerHTML = apps.map(function(a, i) {
+                var status = a.status || 'pending';
+                var uname = a.username || a.discord || a.email || '?';
+                var initial = uname.charAt(0).toUpperCase();
+                var avatarColor = '#a855f7';
+                return '<div class="applicant-card"><div class="applicant-info"><div class="applicant-avatar" style="background:' + avatarColor + '">' + initial + '</div><div><span class="applicant-name">' + uname + '</span><span class="applicant-meta">' +
+                    (a.email || '—') + ' | Discord: ' + (a.discord || '—') +
+                    ' | ' + status + (a.timestamp ? ' | ' + new Date(a.timestamp).toLocaleDateString() : '') +
+                    '</span></div></div><div class="applicant-actions">' +
+                    (status !== 'approved' ? '<button class="btn-sm btn-approve" onclick="approveApplicant(' + i + ')">Approve</button>' : '') +
+                    (status !== 'declined' ? '<button class="btn-sm btn-decline" onclick="declineApplicant(' + i + ')">Decline</button>' : '') +
+                    '</div></div>';
+            }).join('');
+        }).catch(function() {
+            list.innerHTML = '<div class="empty-state">Failed to load applicants.</div>';
+        });
+    }
+
+    window.approveApplicant = function(idx) {
+        fetch(API_URL + '/api/admin-applicant-action', {
+            method: 'POST', headers: apiHeaders(),
+            body: JSON.stringify({ email: '', index: idx, action: 'approved', license_id: 'LIC-' + Date.now() })
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d.ok) { loadApplicants(); refreshStats(); }
+        }).catch(function() { alert('Failed to approve applicant. Check server.'); });
+    };
+
+    window.declineApplicant = function(idx) {
+        fetch(API_URL + '/api/admin-applicant-action', {
+            method: 'POST', headers: apiHeaders(),
+            body: JSON.stringify({ email: '', index: idx, action: 'declined' })
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d.ok) loadApplicants();
+        }).catch(function() { alert('Failed to decline applicant. Check server.'); });
+    };
+
+    function loadLicenses() {
+        var list = $('#licenseList');
+        if (!list) return;
+        list.innerHTML = '<div class="empty-state">Loading license keys...</div>';
+        fetch(API_URL + '/api/admin-licenses', { headers: apiHeaders() }).then(function(r) { return r.json(); }).then(function(keys) {
+            var entries = Object.entries(keys);
+            if (entries.length === 0) {
+                list.innerHTML = '<div class="empty-state">No current keys.</div>';
+                return;
+            }
+            list.innerHTML = entries.map(function(e, i) {
+                var key = e[0], data = e[1];
+                var status = data.status || 'active';
+                var tier = data.tier || 'basic';
+                var created = data.created ? new Date(data.created * 1000).toLocaleDateString() : 'N/A';
+                var isActive = status === 'active';
+                var assigned = data.assigned_to || '—';
+                var notes = data.notes ? ' | ' + data.notes : '';
+                var maskedKey = key.length > 10 ? key.substring(0, 4) + '****-****' + key.substring(key.length - 4) : '****';
+                return '<div class="key-item"><div><div class="key-code"><span class="key-masked" id="km-' + i + '">' + maskedKey + '</span><span class="key-visible" id="kv-' + i + '" style="display:none">' + key + '</span>&nbsp;<button class="key-visibility-btn" onclick="toggleKeyVisibility(' + i + ')" title="Toggle key visibility"><i class="fas fa-eye" id="kvi-' + i + '"></i></button></div><div class="key-meta">Discord: ' + assigned + ' | Created: ' + created + notes + ' | ' +
+                    (isActive ? '<span class="badge-tier badge-' + tier + '">' + tier.toUpperCase() + '</span>' : '<span style="color:#ef4444;font-size:0.75rem">REVOKED</span>') +
+                    '</div></div><div>' + (isActive ? '<button class="btn-sm btn-decline" onclick="revokeLicense(\'' + key.replace(/'/g, "\\'") + '\')">Revoke</button>' : '') + '</div></div>';
+            }).join('');
+        }).catch(function(e) {
+            list.innerHTML = '<div class="empty-state">Failed to load licenses.</div>';
+            console.error('loadLicenses error:', e);
+        });
+    }
+
+    window.toggleKeyVisibility = function(i) {
+        var masked = document.getElementById('km-' + i);
+        var visible = document.getElementById('kv-' + i);
+        var icon = document.getElementById('kvi-' + i);
+        if (!masked || !visible || !icon) return;
+        if (visible.style.display === 'none') {
+            masked.style.display = 'none';
+            visible.style.display = 'inline';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            masked.style.display = 'inline';
+            visible.style.display = 'none';
+            icon.className = 'fas fa-eye';
+        }
+    };
+
+    window.revokeLicense = function(key) {
+        if (!confirm('Revoke license ' + key + '?')) return;
+        fetch(API_URL + '/api/admin-revoke-license', {
+            method: 'POST', headers: apiHeaders(),
+            body: JSON.stringify({ key: key })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) loadLicenses();
+        }).catch(function() { alert('Failed to revoke license. Check server.'); });
+    };
+
+    function loadStock() {
+        fetch(API_URL + '/api/stock').then(function(r){ return r.json(); }).then(function(d){
+            var el = $('#restockCurrentCount');
+            if (el) el.textContent = d.count || 0;
+        }).catch(function(){});
+
+        // Load restock history from localStorage
+        var hist = $('#restockHistory');
+        if (!hist) return;
+        var saved = localStorage.getItem('restock_history');
+        if (saved) {
+            try {
+                var entries = JSON.parse(saved);
+                if (entries && entries.length > 0) {
+                    hist.innerHTML = entries.map(function(e) {
+                        return '<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-muted);border-bottom:1px solid var(--border)">' + e + '</div>';
+                    }).join('');
+                    return;
+                }
+            } catch(e) {}
+        }
+        hist.innerHTML = '<div class="empty-state">No restock history yet.</div>';
+    }
+
+    window.restockMemberships = function(count) {
+        if (count === undefined) {
+            var input = $('#restockInput');
+            count = parseInt(input ? input.value : '0');
+            if (isNaN(count) || count < 0) count = 0;
+        }
+        var msg = $('#restockMsg');
+        fetch(API_URL + '/api/admin-stock', {
+            method: 'POST', headers: apiHeaders(),
+            body: JSON.stringify({ count: count })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (d.ok) {
+                loadStock();
+                if (msg) { msg.textContent = 'Stock updated to ' + count + ' spots!'; msg.style.color = '#22c55e'; msg.style.display = 'block'; setTimeout(function(){ msg.style.display = 'none'; }, 5000); }
+                // Save to localStorage history
+                var entryText = 'Set to ' + count + ' spots — ' + new Date().toLocaleString();
+                var saved = localStorage.getItem('restock_history');
+                var entries = [];
+                if (saved) { try { entries = JSON.parse(saved); } catch(e) {} }
+                entries.unshift(entryText);
+                if (entries.length > 50) entries = entries.slice(0, 50);
+                localStorage.setItem('restock_history', JSON.stringify(entries));
+                // Update DOM
+                var hist = $('#restockHistory');
+                if (hist) {
+                    var entry = document.createElement('div');
+                    entry.style.cssText = 'padding:8px 12px;font-size:0.8rem;color:var(--text-muted);border-bottom:1px solid var(--border)';
+                    entry.textContent = entryText;
+                    hist.insertBefore(entry, hist.firstChild);
+                    if (hist.querySelector('.empty-state')) hist.querySelector('.empty-state').remove();
+                }
+            }
+        }).catch(function(){
+            if (msg) { msg.textContent = 'Error updating stock. Check server connection.'; msg.style.color = '#ef4444'; msg.style.display = 'block'; setTimeout(function(){ msg.style.display = 'none'; }, 5000); }
+        });
+    };
+
+    function loadPayments() {
+        var list = $('#paymentsList');
+        if (!list) return;
+        list.innerHTML = '<div class="empty-state">Loading...</div>';
+        fetch(API_URL + '/api/admin-invoices', { headers: apiHeaders() }).then(function(r){ return r.json(); }).then(function(invs){
+            var countEl = $('#paymentsCount');
+            if (countEl) countEl.textContent = invs.length + ' invoice' + (invs.length !== 1 ? 's' : '');
+            if (!invs || invs.length === 0) {
+                list.innerHTML = '<div class="empty-state">No invoices yet.</div>';
+                return;
+            }
+            list.innerHTML = invs.map(function(inv){
+                var statusClass = inv.status || 'pending';
+                var keyDisplay = inv.private_key ? '<div class="invoice-private-key" id="pk-' + inv.id + '">Private Key: ' + inv.private_key + '</div><button class="btn-sm" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.65rem;font-weight:600" onclick="revealPrivateKey(\'' + inv.id + '\')"><i class="fas fa-eye"></i> Reveal Key</button>' : '';
+                var licenseDisplay = inv.license_generated ? '<div style="margin-top:6px;font-size:0.7rem;color:#22c55e"><i class="fas fa-key"></i> License: <strong>' + inv.license_generated + '</strong></div>' : '';
+                var markBtn = statusClass === 'pending' ? '<button class="btn-sm" style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.65rem;font-weight:600;margin-left:6px" onclick="markInvoicePaid(\'' + inv.id + '\')"><i class="fas fa-check"></i> Mark Paid</button>' : '';
+                return '<div class="invoice-card"><div class="invoice-info"><div class="invoice-id">' + (inv.id || 'N/A') + '</div><div class="invoice-meta">' +
+                    (inv.currency || '—') + ' | Amount: $' + (inv.amount || 0) + ' | ' + (new Date((inv.created || 0) * 1000).toLocaleDateString()) +
+                    (inv.discord_id ? ' | Discord: ' + inv.discord_id : '') +
+                    '</div><div class="invoice-address">' + (inv.address || '—') + '</div>' + keyDisplay + licenseDisplay +
+                    '</div><div class="invoice-actions"><span class="invoice-status ' + statusClass + '">' + statusClass +
+                    '</span>' + markBtn + '</div></div>';
+            }).join('');
+        }).catch(function(){ list.innerHTML = '<div class="empty-state">Failed to load invoices.</div>'; });
+    }
+
+    window.revealPrivateKey = function(id) {
+        var el = document.getElementById('pk-' + id);
+        if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.showToast = function(msg) {
+        var t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);font-size:0.85rem;z-index:9999;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.5)';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); }, 300); }, 4000);
+    };
+
+    window.markInvoicePaid = function(id) {
+        fetch(API_URL + '/api/admin-update-invoice', {
+            method: 'POST',
+            headers: apiHeaders(),
+            body: JSON.stringify({ id: id, status: 'paid' })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            if (d.ok) {
+                showToast('Invoice marked as paid! License: ' + (d.license_key || 'generated'));
+                loadPayments();
+            } else {
+                showToast('Error: ' + (d.error || 'Unknown'));
+            }
+        }).catch(function(){
+            showToast('Failed to update invoice. Check server connection.');
+        });
+    };
+
+    window.refreshPayments = loadPayments;
+
+    // ── 5-Second Redirect Overlay ──
+    function showRedirect(target, label) {
+        var overlay = $('#redirectOverlay');
+        var text = $('#redirectText');
+        var sub = $('#redirectSub');
+        if (!overlay) { window.location.href = target; return; }
+        overlay.classList.add('active');
+        if (text) text.textContent = 'Redirecting to ' + (label || target) + '...';
+        if (sub) sub.textContent = 'Please wait while we prepare your destination.';
+        setTimeout(function() { window.location.href = target; }, 5000);
+    }
+
+    // Intercept external nav link clicks
+    document.querySelectorAll('.redirect-link[data-target]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var target = this.dataset.target;
+            var label = this.textContent.trim().replace(/^\S+\s/, '') || target;
+            showRedirect(target, label);
+        });
+    });
+
+
+
+    // ── Admin Settings Functions ──
+    var ADM_USERS = {
+        "953177450391683082": { name: "Glow", license: "8K3X-M9P1-Q2R7-V5N2", admin: true },
+        "695697021868310669": { name: "andyttc", license: "J4W6-B8T2-C1D9-F3H5", admin: false },
+        "186105992252096512": { name: "Nazistu", license: "A7S3-D5F6-G8H2-J9K4", admin: false },
+        "222898514789662721": { name: "No Leg Leny", license: "L1Q2-W3E4-R5T6-Y7U8", admin: false },
+        "741378521460637773": { name: "pxsymbol", license: "Z9X8-C7V6-B5N4-M3L2", admin: false },
+        "1389284552442253352": { name: "Braeden Nigley", license: "P1O2-I3U4-Y5T6-R7E8", admin: false }
+    };
+
+    window.saveAdmSite = function() {
+        var name = document.getElementById('admSiteName').value.trim();
+        var email = document.getElementById('admSupportEmail').value.trim();
+        localStorage.setItem('adm_site_name', name);
+        localStorage.setItem('adm_support_email', email);
+        var msg = document.getElementById('admSiteMsg');
+        msg.textContent = 'Site settings saved!';
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 2500);
+    };
+
+    window.saveAdmPayment = function() {
+        var price = document.getElementById('admPrice').value;
+        var curr = document.getElementById('admCurrency').value;
+        var addr = document.getElementById('admReceiveAddress').value.trim();
+        localStorage.setItem('adm_price', price);
+        localStorage.setItem('adm_currency', curr);
+        localStorage.setItem('adm_receive_address', addr);
+        var msg = document.getElementById('admPayMsg');
+        if (addr) {
+            msg.textContent = 'Payment settings saved! Address: ' + addr.substring(0, 12) + '...';
+        } else {
+            msg.textContent = 'Payment settings saved! (no address set)';
+        }
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 3500);
+    };
+
+    window.copyAdminKey = function() {
+        copyToClipboard(document.getElementById('adminKeyDisplay').value, document.getElementById('adminKeyMsg'));
+    };
+
+    window.changeAdminKey = function() {
+        var input = document.getElementById('newAdminKeyInput');
+        var msg = document.getElementById('adminKeyMsg');
+        var val = input.value.trim();
+        if (!val || val.length < 6) {
+            msg.textContent = 'Key must be 6+ characters.';
+            msg.style.color = '#ef4444';
+            msg.style.display = 'block';
+            return;
+        }
+        document.getElementById('adminKeyDisplay').value = val;
+        ADMIN_KEY = val;
+        localStorage.setItem('adm_admin_key', val);
+        input.value = '';
+        msg.textContent = 'Admin key updated and saved!';
+        msg.style.color = '#22c55e';
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 3000);
+    };
+
+    window.lookupMember = function() {
+        var did = document.getElementById('memberLookupInput').value.trim();
+        var result = document.getElementById('memberLookupResult');
+        if (!did) { result.style.display = 'block'; result.innerHTML = 'Enter a Discord ID.'; result.style.color = '#ef4444'; return; }
+        var user = ADM_USERS[did];
+        if (user) {
+            result.style.display = 'block';
+            result.style.color = '';
+            result.innerHTML = '<div><strong>' + user.name + '</strong></div><div>License: <span style="color:var(--primary);font-family:monospace">' + user.license + '</span></div><div>Admin: ' + (user.admin ? '<span style="color:#22c55e">Yes</span>' : 'No') + '</div>';
+        } else {
+            // Also search applicants from server
+            result.style.display = 'block';
+            result.style.color = '#f59e0b';
+            result.innerHTML = 'User not found in local records. Checking applicants...';
+            fetch(API_URL + '/api/admin-applicants', { headers: apiHeaders() }).then(function(r){ return r.json(); }).then(function(apps){
+                var found = apps.filter(function(a){ return (a.discord && a.discord.indexOf(did) !== -1) || (a.email && a.email.indexOf(did) !== -1); });
+                if (found.length > 0) {
+                    result.style.color = '';
+                    result.innerHTML = found.map(function(a){
+                        return '<div style="margin-bottom:6px"><strong>' + (a.discord || a.email) + '</strong><div style="font-size:0.75rem;color:var(--text-muted)">Status: ' + (a.status || 'pending') + ' | Submitted: ' + (a.created ? new Date(a.created * 1000).toLocaleDateString() : 'N/A') + '</div></div>';
+                    }).join('');
+                } else {
+                    result.innerHTML = 'No matching records found. Check the Licenses or Applicants tabs.';
+                }
+            }).catch(function(){
+                result.innerHTML = 'User not found locally and server search failed.';
+            });
+        }
+    };
+
+    // ── Custom Confirm Modal for License Creation ──
+    var pendingLicenseData = null;
+
+    function initConfirmModal() {
+        var cancelBtn = document.getElementById('confirmModalCancel');
+        var confirmBtn = document.getElementById('confirmModalConfirm');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                document.getElementById('confirmModalOverlay').classList.remove('active');
+                pendingLicenseData = null;
+            });
+        }
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                document.getElementById('confirmModalOverlay').classList.remove('active');
+                if (pendingLicenseData) {
+                    executeGenerateLicense(pendingLicenseData);
+                    pendingLicenseData = null;
+                }
+            });
+        }
+    }
+
+    window.copyGeneratedKey = function() {
+        var key = document.getElementById('licenseSuccessKey').textContent;
+        copyToClipboard(key, null);
+        var btn = document.querySelector('.license-success-frame .btn-approve');
+        if (btn) {
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(function() { btn.innerHTML = orig; }, 2000);
+        }
+    };
+
+    // Replace the old generateLicense with custom modal version
+    window.generateLicense = function() {
+        var tier = document.getElementById('tierSelect').value;
+        var key = document.getElementById('licenseKeyInput').value.trim();
+        var assigned = document.getElementById('licenseAssignedInput').value.trim();
+        var notes = document.getElementById('licenseNotesInput').value.trim();
+        pendingLicenseData = { tier: tier, key: key, assigned: assigned, notes: notes };
+
+        var badge = document.getElementById('confirmTierBadge');
+        badge.textContent = tier.toUpperCase();
+        var colors = { premium: 'rgba(168,85,247,0.2)', staff: 'rgba(59,130,246,0.2)' };
+        var textColors = { premium: 'var(--primary)', staff: '#3b82f6' };
+        badge.style.background = colors[tier] || colors.premium;
+        badge.style.color = textColors[tier] || textColors.premium;
+
+        document.getElementById('confirmModalOverlay').classList.add('active');
+    };
+
+    function executeGenerateLicense(data) {
+        var body = { tier: data.tier };
+        if (data.key) body.manual_key = data.key;
+        if (data.assigned) body.assigned_to = data.assigned;
+        if (data.notes) body.notes = data.notes;
+        fetch(API_URL + '/api/admin-generate-license', {
+            method: 'POST', headers: apiHeaders(),
+            body: JSON.stringify(body)
+        }).then(function(r) { return r.json(); }).then(function(resp) {
+            if (resp.ok) {
+                // Show success frame
+                var frame = document.getElementById('licenseSuccessFrame');
+                var keyEl = document.getElementById('licenseSuccessKey');
+                var discordEl = document.getElementById('licenseSuccessDiscord');
+                keyEl.textContent = resp.key;
+                discordEl.textContent = data.assigned || '(not assigned)';
+                frame.style.display = 'flex';
+                setTimeout(function() { frame.style.display = 'none'; }, 15000);
+
+                // Clear form
+                document.getElementById('licenseKeyInput').value = '';
+                document.getElementById('licenseAssignedInput').value = '';
+                document.getElementById('licenseNotesInput').value = '';
+                setTimeout(loadLicenses, 300);
+                copyToClipboard(resp.key, document.getElementById('copiedMsg'), 'Key copied!');
+            } else {
+                alert('Error: ' + (resp.error || 'Failed to create license'));
+            }
+        }).catch(function() {
+            alert('Network error creating license. Check server status.');
+        });
+    }
+
+    // ── Danger Zone buttons ──
+    window.resetStock = function() {
+        if (!confirm('Are you sure you want to reset stock to 0? This action is irreversible.')) return;
+        restockMemberships(0);
+        document.getElementById('dangerZoneMsg').textContent = 'Stock reset to 0.';
+        document.getElementById('dangerZoneMsg').style.display = 'block';
+        setTimeout(function() { document.getElementById('dangerZoneMsg').style.display = 'none'; }, 3000);
+    };
+
+    window.unlimitedStock = function() {
+        if (!confirm('Set stock to 999 (unlimited)? This can be changed later.')) return;
+        restockMemberships(999);
+        document.getElementById('dangerZoneMsg').textContent = 'Stock set to 999 (unlimited).';
+        document.getElementById('dangerZoneMsg').style.display = 'block';
+        setTimeout(function() { document.getElementById('dangerZoneMsg').style.display = 'none'; }, 3000);
+    };
+});
+</script>
+</body>
+</html>
