@@ -36,16 +36,11 @@ USERS_FILE = SCRIPT_DIR / "users.json"
 SESSION_SECRET = secrets.token_hex(32)
 
 # Hardcoded admin credentials (Glow/Darkusi only)
-ADMIN_CREDENTIALS = {
-    "Glow": {
-        "password_hash": generate_password_hash("claimscasino2024"),
-        "discord_id": "953177450391683082"
-    },
-    "Darkusi": {
-        "password_hash": generate_password_hash("darkusi2024"),
-        "discord_id": ""
+def get_admin_credentials():
+    return {
+        "Glow": {"password_hash": generate_password_hash("claimscasino2024"), "discord_id": "953177450391683082"},
+        "Darkusi": {"password_hash": generate_password_hash("darkusi2024"), "discord_id": ""}
     }
-}
 
 FLASK_PORT = 5001
 CHECK_INTERVAL = 60
@@ -4800,9 +4795,16 @@ app.secret_key = SESSION_SECRET
 
 @app.before_request
 def enforce_https():
-    if request.headers.get('X-Forwarded-Proto', '').lower() == 'http':
-        url = request.url.replace('http://', 'https://', 1)
-        return redirect(url, code=301)
+    # Skip redirect for health checks and internal Render traffic
+    if request.path == '/health' or request.path == '/':
+        return
+    proto = request.headers.get('X-Forwarded-Proto', '').lower()
+    if proto == 'http':
+        host = request.headers.get('Host', '')
+        # Only redirect for external (non-Render-internal) hosts
+        if 'onrender.com' not in host:
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
 
 @app.after_request
 def add_cors_headers(resp):
@@ -4810,6 +4812,10 @@ def add_cors_headers(resp):
     resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     return resp
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"}), 200
 
 @app.route("/")
 def index():
@@ -5112,7 +5118,8 @@ def membership_page():
 
 def _check_admin_auth():
     """Return True if session auth (Glow/Darkusi) or X-Admin-Key header matches ADMIN_KEY."""
-    if session.get('admin_user') in ADMIN_CREDENTIALS:
+    creds = get_admin_credentials()
+    if session.get('admin_user') in creds:
         return True
     if session.get('admin_id') or session.get('admin_email'):
         return True
@@ -5326,15 +5333,17 @@ def admin_login():
     if method == "username":
         username = data.get("username", "").strip()
         password = data.get("password", "")
-        if username in ADMIN_CREDENTIALS:
-            if check_password_hash(ADMIN_CREDENTIALS[username]["password_hash"], password):
+        creds = get_admin_credentials()
+        if username in creds:
+            if check_password_hash(creds[username]["password_hash"], password):
                 session['admin_user'] = username
                 return jsonify({"ok": True, "user": username})
     
     if method == "discord":
         discord_id = data.get("id", "").strip()
-        # Check hardcoded Glow discord_id first
-        for uname, creds in ADMIN_CREDENTIALS.items():
+        # Check hardcoded admin discord_ids first
+        creds = get_admin_credentials()
+        for uname, c in creds.items():
             if creds.get("discord_id") == discord_id:
                 session['admin_user'] = uname
                 return jsonify({"ok": True})
