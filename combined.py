@@ -38,8 +38,8 @@ SESSION_SECRET = secrets.token_hex(32)
 # Hardcoded admin credentials (Glow/Darkusi only)
 def get_admin_credentials():
     return {
-        "Glow": {"password_hash": generate_password_hash("claimscasino2024"), "discord_id": "953177450391683082"},
-        "Darkusi": {"password_hash": generate_password_hash("darkusi2024"), "discord_id": ""}
+        "Glow": {"password_hash": generate_password_hash("claimscasino2024"), "discord_id": "953177450391683082", "email": "glowrius@proton.me", "email_password_hash": generate_password_hash("G@@gle080808")},
+        "Darkusi": {"password_hash": generate_password_hash("darkusi2024"), "discord_id": "", "email": None, "email_password_hash": None}
     }
 
 FLASK_PORT = 5001
@@ -3100,6 +3100,7 @@ ADMIN_PANEL_HTML = """<!DOCTYPE html>
         <div class="nav-item active" onclick="showSection('dashboard')">Dashboard</div>
         <div class="nav-item" onclick="showSection('users')">User Management</div>
         <div class="nav-item" onclick="showSection('orders')">Order History</div>
+        <div class="nav-item" onclick="showSection('signups')">Sign-ups</div>
         <div class="nav-item" onclick="showSection('licenses')">Licenses</div>
         <div class="admin-login-indicator">
             <span class="arrow">▶</span>
@@ -3168,6 +3169,17 @@ ADMIN_PANEL_HTML = """<!DOCTYPE html>
                 <div class="empty-state">No orders found.</div>
             </div>
         </div>
+        <!-- Sign-ups Section -->
+        <div id="section-signups" class="section-hidden">
+            <div class="panel-title">New Sign-ups</div>
+            <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <span class="payments-count" id="signups-count" style="color:var(--text-muted);font-size:0.85rem">0 users</span>
+                <button class="btn-generate" style="font-size:0.78rem;padding:6px 14px" onclick="loadSignups()">Refresh</button>
+            </div>
+            <div class="user-list" id="signups-list">
+                <div class="empty-state">No sign-ups yet.</div>
+            </div>
+        </div>
         <!-- Licenses Section -->
         <div id="section-licenses" class="section-hidden">
             <div class="panel-title">License Keys</div>
@@ -3200,6 +3212,7 @@ function showSection(section) {
     if (section === 'licenses') { loadLicenses(); }
     if (section === 'users') { loadUsers(); }
     if (section === 'orders') { loadOrders(); }
+    if (section === 'signups') { loadSignups(); }
 }
 function loadOrders(filter) {
     filter = filter || 'all';
@@ -3240,6 +3253,43 @@ function loadOrders(filter) {
         .catch(function() {
             list.innerHTML = '<div class="empty-state">Failed to load invoices. Check server.</div>';
         });
+}
+function loadSignups() {
+    var list = document.getElementById('signups-list');
+    var countEl = document.getElementById('signups-count');
+    list.innerHTML = 'Loading...';
+    fetch('/api/admin/signups')
+        .then(function(r) { return r.json(); })
+        .then(function(users) {
+            if (!users || users.length === 0) {
+                list.innerHTML = '<div class="empty-state">No sign-ups yet.</div>';
+                if (countEl) countEl.textContent = '0 users';
+                return;
+            }
+            if (countEl) countEl.textContent = users.length + ' user(s)';
+            list.innerHTML = users.map(function(u) {
+                var date = u.created_at ? new Date(u.created_at * 1000).toLocaleString() : 'N/A';
+                var approved = u.approved ? '<span style="color:#22c55e;font-size:0.75rem">✓</span>' : '<span style="color:#f59e0b;font-size:0.75rem">✗</span>';
+                return '<div class="user-item" style="flex-direction:column;align-items:flex-start;gap:4px">' +
+                    '<div style="display:flex;width:100%;justify-content:space-between;align-items:center">' +
+                        '<span style="font-weight:600;color:var(--text-bright)">' + escapeHtml(u.username || '—') + '</span>' +
+                        '<span style="font-size:0.75rem;color:var(--text-muted)">' + date + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:0.8rem;color:var(--text-muted)">' +
+                        'Email: ' + escapeHtml(u.email || '—') +
+                        ' | Discord: ' + escapeHtml(u.discord || '—') +
+                        ' | Approved: ' + approved +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        })
+        .catch(function() {
+            list.innerHTML = '<div class="empty-state">Failed to load sign-ups.</div>';
+        });
+}
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function approveOrder(invoiceId) {
     if (!invoiceId) return;
@@ -5356,10 +5406,18 @@ def admin_login():
     elif method == "email":
         email = data.get("email", "").lower()
         password = data.get("password", "")
+        # Check admin_users.json
         admin = load_admin_users()
         if admin.get("emails", {}).get(email) == hashlib.sha256(password.encode()).hexdigest():
             session['admin_email'] = email
             return jsonify({"ok": True})
+        # Check hardcoded admin credentials
+        creds = get_admin_credentials()
+        for uname, c in creds.items():
+            if c.get("email") and c["email"].lower() == email:
+                if check_password_hash(c["email_password_hash"], password):
+                    session['admin_user'] = uname
+                    return jsonify({"ok": True, "user": uname})
     
     elif method == "key":
         key = data.get("key", "").strip()
@@ -5658,6 +5716,24 @@ def api_admin_invoices():
         return jsonify({"error": "Unauthorized"}), 401
     invoices = load_invoices()
     return jsonify(invoices)
+
+@app.route("/api/admin/signups")
+def api_admin_signups():
+    if not _check_admin_auth():
+        return jsonify({"error": "Unauthorized"}), 401
+    users = load_users()
+    sorted_users = sorted(users, key=lambda u: u.get("created_at", 0), reverse=True)
+    result = []
+    for u in sorted_users:
+        result.append({
+            "id": u.get("id"),
+            "email": u.get("email"),
+            "username": u.get("username"),
+            "discord": u.get("discord", ""),
+            "approved": u.get("approved", False),
+            "created_at": u.get("created_at", 0)
+        })
+    return jsonify(result)
 
 @app.route("/api/admin-invoice", methods=["POST"])
 def api_admin_invoice():

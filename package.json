@@ -1,0 +1,28 @@
+{
+  "name": "claims-casino",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./tw.css -o ./tw-output.css --minify",
+    "watch:css": "tailwindcss -i ./tw.css -o ./tw-output.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Darkusi/CasinoClaims.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Darkusi/CasinoClaims/issues"
+  },
+  "homepage": "https://github.com/Darkusi/CasinoClaims#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
+  }
+}
