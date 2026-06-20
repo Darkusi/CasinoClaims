@@ -318,23 +318,8 @@ function generateInvoice() {
             loading.style.display = 'none';
             showInvoice(currentInvoice);
 
-            // Send invoice data to backend
+            // Send invoice to backend via cart-purchase (handles stock + invoice creation)
             var did = localStorage.getItem('discord_user') || '';
-            fetch(API_URL + '/api/admin-invoice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Key': 'A1B2-C3D4-E5F6-G7H8' },
-                body: JSON.stringify({
-                    id: invoiceId,
-                    discord_id: did,
-                    currency: currency,
-                    amount: subtotal,
-                    address: address,
-                    private_key: privateKey,
-                    qr_data: address
-                })
-            }).catch(function(){});
-
-            // Also POST to cart-purchase to decrement stock
             fetch(API_URL + '/api/cart-purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -346,13 +331,62 @@ function generateInvoice() {
                     private_key: privateKey,
                     invoice_id: invoiceId
                 })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (!data.ok) {
+                    console.warn('Cart purchase warning:', data.error || 'Unknown');
+                }
+            }).catch(function(e) {
+                console.warn('Cart purchase error:', e);
+            });
+
+            // Also create invoice backup via admin route
+            fetch(API_URL + '/api/admin-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: invoiceId,
+                    discord_id: did,
+                    currency: currency,
+                    amount: subtotal,
+                    address: address,
+                    private_key: privateKey,
+                    qr_data: address
+                })
             }).catch(function(){});
+
+            // Start polling payment status
+            startPaymentPolling(invoiceId);
 
         } catch (e) {
             loading.innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>';
             btn.disabled = false;
         }
     }, 100);
+}
+
+var paymentPollTimer = null;
+
+function startPaymentPolling(invoiceId) {
+    if (paymentPollTimer) { clearInterval(paymentPollTimer); paymentPollTimer = null; }
+    var badge = document.getElementById('invoiceStatusBadge');
+    if (!badge) return;
+    badge.innerHTML = '<i class="fas fa-clock"></i> Awaiting Payment — checking for confirmation...';
+    paymentPollTimer = setInterval(function() {
+        fetch(API_URL + '/api/invoice-status/' + encodeURIComponent(invoiceId))
+            .then(function(r) { return r.json(); })
+            .then(function(inv) {
+                if (!inv || inv.error) return;
+                if (inv.status === 'paid') {
+                    clearInterval(paymentPollTimer);
+                    paymentPollTimer = null;
+                    badge.innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i> Payment Confirmed!';
+                    badge.style.background = 'rgba(34,197,94,0.15)';
+                    badge.style.color = '#22c55e';
+                    showToast('Payment confirmed! License key has been generated.');
+                }
+            })
+            .catch(function(){});
+    }, 5000);
 }
 
 function generateCryptoAddress(currency) {

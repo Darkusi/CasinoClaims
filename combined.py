@@ -35,6 +35,18 @@ APPROVED_USERS_FILE = SCRIPT_DIR / "approved_users.json"
 USERS_FILE = SCRIPT_DIR / "users.json"
 SESSION_SECRET = secrets.token_hex(32)
 
+# Hardcoded admin credentials (Glow/Darkusi only)
+ADMIN_CREDENTIALS = {
+    "Glow": {
+        "password_hash": generate_password_hash("claimscasino2024"),
+        "discord_id": "953177450391683082"
+    },
+    "Darkusi": {
+        "password_hash": generate_password_hash("darkusi2024"),
+        "discord_id": ""
+    }
+}
+
 FLASK_PORT = 5001
 CHECK_INTERVAL = 60
 SUBREDDITS = ["SweepStakeSideHustle"]
@@ -80,17 +92,26 @@ LICENSE_KEYS_FILE = SCRIPT_DIR / "license_keys.json"
 DEFAULT_LICENSE_KEY = "SPIN-2024-LIVE"
 LEGACY_LICENSE_KEYS = ("2026",)
 
+LICENSE_DURATIONS = {1: "1 Month", 3: "3 Months", 6: "6 Months", 12: "12 Months", 0: "Lifetime"}
+
 def normalize_license_key(value):
     return (value or "").strip().upper().replace("-", "").replace(" ", "")
 
-def generate_license_key():
-    """Generate a new license key in format XXXX-XXXX-XXXX-XXXX"""
+def generate_license_key(duration_months=0):
+    """Generate a new license key in format XXXX-XXXX-XXXX-XXXX
+    duration_months: 0 = lifetime, 1-12 = months until expiry"""
     import random, string
     chars = string.ascii_uppercase + string.digits
     groups = []
     for _ in range(4):
         groups.append(''.join(random.choices(chars, k=4)))
     return '-'.join(groups)
+
+def calc_expiry(duration_months):
+    """Calculate expires_at timestamp from duration_months (0 = lifetime/null)"""
+    if duration_months and duration_months > 0:
+        return time.time() + (duration_months * 30 * 24 * 3600)
+    return None
 
 def load_license_keys():
     if LICENSE_KEYS_FILE.exists():
@@ -371,6 +392,25 @@ def fetch_daily_freebies():
         print(f"[Reddit] fetch_daily_freebies failed: {e}")
         traceback.print_exc()
         return []
+
+def license_expiry_loop():
+    """Background thread that checks for expired license keys every 60s."""
+    while True:
+        try:
+            keys = load_license_keys()
+            now = time.time()
+            changed = False
+            for key, data in keys.items():
+                if data.get("status") == "active" and data.get("expires_at"):
+                    if now > data["expires_at"]:
+                        data["status"] = "expired"
+                        changed = True
+                        print(f"[License Expiry] Key {key[:8]}... has expired.")
+            if changed:
+                save_license_keys(keys)
+        except Exception as e:
+            print(f"[License Expiry] Error: {e}")
+        time.sleep(60)
 
 def daily_freebies_loop():
     while True:
@@ -1910,15 +1950,16 @@ LICENSE_HTML = """<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <div class="license-box">
-        <div class="icon">🔒</div>
-        <h1><span>License</span> Required</h1>
-        <p>Enter your license key to access the dashboard</p>
-        <input type="text" id="license" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" autocomplete="off">
-        <button type="button" onclick="checkLicense()">ACCESS DASHBOARD</button>
-        <div class="error" id="error">Invalid license key. Please try again.</div>
-        <div class="footer-text">Claim City 2026</div>
-    </div>
+        <div class="license-box">
+            <div class="icon">🔒</div>
+            <h1><span>License</span> Required</h1>
+            <p>Enter your license key to access the dashboard</p>
+            <input type="text" id="license" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" autocomplete="off">
+            <button type="button" onclick="checkLicense()">ACCESS DASHBOARD</button>
+            <div class="error" id="error">Invalid license key. Please try again.</div>
+            <div class="footer-text" id="expiryInfo" style="display:none;color:#f59e0b;font-size:0.78rem;margin-top:6px"></div>
+            <div class="footer-text">Claim City 2026</div>
+        </div>
     <script>
         function formatKey(input) {
             var value = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -1944,7 +1985,21 @@ LICENSE_HTML = """<!DOCTYPE html>
             })
             .then(function(res) { if (!res.ok) throw new Error('bad status'); return res.json(); })
             .then(function(data) {
-                if (data.valid) { window.location.href = '/'; }
+                if (data.valid) {
+                    // Show expiry info if available
+                    var ei = document.getElementById('expiryInfo');
+                    if (ei && data.expires_at) {
+                        var remaining = (data.expires_at - Math.floor(Date.now() / 1000));
+                        var days = Math.max(0, Math.floor(remaining / 86400));
+                        if (days > 0) {
+                            ei.textContent = 'License expires in ' + days + ' day(s)';
+                        } else {
+                            ei.textContent = 'License expires today';
+                        }
+                        ei.style.display = 'block';
+                    }
+                    setTimeout(function() { window.location.href = '/'; }, 1500);
+                }
                 else { err.textContent = 'Invalid license key. Please try again.'; err.classList.add('show'); }
             })
             .catch(function() { err.textContent = 'Could not reach the server.'; err.classList.add('show'); });
@@ -2775,11 +2830,24 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
         <div class="login-box">
             <h1>ADMIN ACCESS</h1>
             <div class="tabs">
-                <div class="tab active" onclick="showTab('discord')">Discord ID</div>
+                <div class="tab active" onclick="showTab('username')">Username</div>
+                <div class="tab" onclick="showTab('discord')">Discord ID</div>
                 <div class="tab" onclick="showTab('email')">Email</div>
             </div>
             
-            <div id="discord-tab">
+            <div id="username-tab">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="admin_username" placeholder="Glow / Darkusi">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="admin_password" placeholder="••••••••">
+                </div>
+                <button class="submit-btn" onclick="loginUsername()">LOGIN</button>
+            </div>
+            
+            <div id="discord-tab" style="display:none">
                 <div class="form-group">
                     <label>Discord ID</label>
                     <input type="text" id="admin_discord_id" placeholder="123456789012345678">
@@ -2794,7 +2862,7 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="admin_password" placeholder="••••••••">
+                    <input type="password" id="admin_password2" placeholder="••••••••">
                 </div>
                 <button class="submit-btn" onclick="loginEmail()">LOGIN</button>
             </div>
@@ -2804,13 +2872,26 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
     </div>
 
 <script>
-let currentTab = 'discord';
+let currentTab = 'username';
 function showTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
+    document.getElementById('username-tab').style.display = tab === 'username' ? 'block' : 'none';
     document.getElementById('discord-tab').style.display = tab === 'discord' ? 'block' : 'none';
     document.getElementById('email-tab').style.display = tab === 'email' ? 'block' : 'none';
+}
+function loginUsername() {
+    const username = document.getElementById('admin_username').value.trim();
+    const password = document.getElementById('admin_password').value;
+    fetch('/admin-login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({method: 'username', username: username, password: password})
+    }).then(r => r.json()).then(d => {
+        if (d.ok) window.location.href = '/admin';
+        else document.getElementById('err').style.display = 'block';
+    });
 }
 function loginDiscord() {
     const id = document.getElementById('admin_discord_id').value.trim();
@@ -2825,7 +2906,7 @@ function loginDiscord() {
 }
 function loginEmail() {
     const email = document.getElementById('admin_email').value;
-    const password = document.getElementById('admin_password').value;
+    const password = document.getElementById('admin_password2').value;
     fetch('/admin-login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -3023,6 +3104,7 @@ ADMIN_PANEL_HTML = """<!DOCTYPE html>
         <h2>CLAIMS ADMIN</h2>
         <div class="nav-item active" onclick="showSection('dashboard')">Dashboard</div>
         <div class="nav-item" onclick="showSection('users')">User Management</div>
+        <div class="nav-item" onclick="showSection('orders')">Order History</div>
         <div class="nav-item" onclick="showSection('licenses')">Licenses</div>
         <div class="admin-login-indicator">
             <span class="arrow">▶</span>
@@ -3075,6 +3157,22 @@ ADMIN_PANEL_HTML = """<!DOCTYPE html>
             <div class="panel-title" style="font-size:1rem;margin-top:24px;">Approved Users</div>
             <div class="user-list" id="user-list"></div>
         </div>
+        <!-- Orders Section -->
+        <div id="section-orders" class="section-hidden">
+            <div class="panel-title">Order History</div>
+            <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+                <span class="payments-count" id="orders-count" style="color:var(--text-muted);font-size:0.85rem">0 invoices</span>
+                <div style="display:flex;gap:6px;margin-left:auto">
+                    <button class="btn-generate" style="font-size:0.78rem;padding:6px 14px" onclick="loadOrders('all')">All</button>
+                    <button class="btn-generate" style="font-size:0.78rem;padding:6px 14px" onclick="loadOrders('pending')">Pending</button>
+                    <button class="btn-generate" style="font-size:0.78rem;padding:6px 14px" onclick="loadOrders('paid')">Paid</button>
+                    <button class="btn-generate" style="font-size:0.78rem;padding:6px 14px" onclick="loadOrders()">Refresh</button>
+                </div>
+            </div>
+            <div class="user-list" id="orders-list">
+                <div class="empty-state">No orders found.</div>
+            </div>
+        </div>
         <!-- Licenses Section -->
         <div id="section-licenses" class="section-hidden">
             <div class="panel-title">License Keys</div>
@@ -3082,6 +3180,13 @@ ADMIN_PANEL_HTML = """<!DOCTYPE html>
                 <select id="tier-select">
                     <option value="basic">Basic</option>
                     <option value="premium">Premium</option>
+                </select>
+                <select id="duration-select">
+                    <option value="1">1 Month</option>
+                    <option value="3">3 Months</option>
+                    <option value="6">6 Months</option>
+                    <option value="12">12 Months</option>
+                    <option value="0">Lifetime</option>
                 </select>
                 <button class="btn-generate" onclick="generateLicense()">GENERATE KEY</button>
             </div>
@@ -3099,6 +3204,65 @@ function showSection(section) {
     document.getElementById('section-' + section).classList.remove('section-hidden');
     if (section === 'licenses') { loadLicenses(); }
     if (section === 'users') { loadUsers(); }
+    if (section === 'orders') { loadOrders(); }
+}
+function loadOrders(filter) {
+    filter = filter || 'all';
+    var list = document.getElementById('orders-list');
+    var countEl = document.getElementById('orders-count');
+    list.innerHTML = 'Loading...';
+    fetch('/api/admin-invoices')
+        .then(function(r) { return r.json(); })
+        .then(function(invoices) {
+            if (!invoices || invoices.length === 0) {
+                list.innerHTML = '<div class="empty-state">No invoices found.</div>';
+                if (countEl) countEl.textContent = '0 invoices';
+                return;
+            }
+            var filtered = invoices;
+            if (filter === 'pending') filtered = invoices.filter(function(i) { return i.status === 'pending'; });
+            else if (filter === 'paid') filtered = invoices.filter(function(i) { return i.status === 'paid'; });
+            if (countEl) countEl.textContent = filtered.length + ' ' + filter + ' invoice(s)';
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state">No ' + filter + ' invoices.</div>';
+                return;
+            }
+            list.innerHTML = filtered.map(function(inv) {
+                var created = inv.created ? new Date(inv.created * 1000).toLocaleString() : 'N/A';
+                var statusColor = inv.status === 'paid' ? '#22c55e' : inv.status === 'pending' ? '#f59e0b' : '#ef4444';
+                var addr = inv.address ? inv.address.substring(0, 16) + '...' : '—';
+                return '<div class="key-item"><div><div class="key-code" style="font-size:0.8rem">' + (inv.id || '—') + '</div><div class="key-meta">' +
+                    'Discord: ' + (inv.discord_id || '—') +
+                    ' | ' + (inv.currency || '—') + ' $' + (inv.amount || 0).toFixed(2) +
+                    ' | ' + created +
+                    ' | Address: ' + addr +
+                    '</div></div><div style="display:flex;gap:6px;align-items:center">' +
+                    '<span style="color:' + statusColor + ';font-size:0.78rem;font-weight:700;text-transform:uppercase">' + (inv.status || 'unknown') + '</span>' +
+                    (inv.status === 'pending' ? '<button class="btn-generate" style="font-size:0.7rem;padding:4px 10px" onclick="approveOrder(\'' + (inv.id || '') + '\')">Approve</button>' : '') +
+                    '</div></div>';
+            }).join('');
+        })
+        .catch(function() {
+            list.innerHTML = '<div class="empty-state">Failed to load invoices. Check server.</div>';
+        });
+}
+function approveOrder(invoiceId) {
+    if (!invoiceId) return;
+    if (!confirm('Approve invoice ' + invoiceId + '? This will generate a license key.')) return;
+    fetch('/api/admin-update-invoice', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: invoiceId, status: 'paid'})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.ok) {
+            alert('Invoice approved! License key: ' + (d.license_key || 'generated'));
+            loadOrders();
+        } else {
+            alert('Failed to approve invoice.');
+        }
+    }).catch(function() {
+        alert('Server error.');
+    });
 }
 function approveUser() {
     const id = document.getElementById('approveId').value.trim();
@@ -3184,16 +3348,25 @@ function loadLicenses() {
             const tier = data.tier || 'basic';
             const created = data.created ? new Date(data.created * 1000).toLocaleDateString() : 'N/A';
             const isActive = status === 'active';
-            return '<div class="key-item"><div><div class="key-code">' + key + '</div><div class="key-meta">Created: ' + created + ' | ' + (isActive ? '<span class="badge-tier badge-' + tier + '">' + tier.toUpperCase() + '</span>' : '<span class="badge-revoked">REVOKED</span>') + '</div></div><div>' + (isActive ? '<button class="btn-remove" onclick="revokeLicense(\'' + key + '\')">Revoke</button>' : '') + '</div></div>';
+            const duration = data.duration_months === 0 ? 'Lifetime' : data.duration_months ? data.duration_months + 'mo' : '';
+            let expiryStr = '';
+            if (data.expires_at) {
+                const remaining = data.expires_at - Date.now() / 1000;
+                expiryStr = remaining > 0 ? 'Expires: ' + new Date(data.expires_at * 1000).toLocaleDateString() : '<span class="badge-revoked">EXPIRED</span>';
+            } else {
+                expiryStr = 'No expiry';
+            }
+            return '<div class="key-item"><div><div class="key-code">' + key + '</div><div class="key-meta">' + duration + (duration ? ' | ' : '') + 'Created: ' + created + ' | ' + expiryStr + ' | ' + (isActive ? '<span class="badge-tier badge-' + tier + '">' + tier.toUpperCase() + '</span>' : '<span class="badge-revoked">' + status.toUpperCase() + '</span>') + '</div></div><div>' + (isActive ? '<button class="btn-remove" onclick="revokeLicense(\'' + key + '\')">Revoke</button>' : '') + '</div></div>';
         }).join('');
     });
 }
 function generateLicense() {
     const tier = document.getElementById('tier-select').value;
+    const duration = parseInt(document.getElementById('duration-select').value) || 0;
     fetch('/api/admin-generate-license', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({tier: tier})
+        body: JSON.stringify({tier: tier, duration_months: duration})
     }).then(r => r.json()).then(data => {
         if (data.ok) {
             loadLicenses();
@@ -4625,6 +4798,12 @@ def trigger_automation(url, title):
 app = Flask(__name__)
 app.secret_key = SESSION_SECRET
 
+@app.before_request
+def enforce_https():
+    if request.headers.get('X-Forwarded-Proto', '').lower() == 'http':
+        url = request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
+
 @app.after_request
 def add_cors_headers(resp):
     resp.headers['Access-Control-Allow-Origin'] = '*'
@@ -4638,6 +4817,22 @@ def index():
     license_data = session.get('license')
     if not license_data or not license_data.get('valid'):
         return LICENSE_HTML
+    # Check if the stored license key has expired
+    stored_key = license_data.get('key', '')
+    if stored_key:
+        keys = load_license_keys()
+        if stored_key in keys:
+            key_data = keys[stored_key]
+            if key_data.get("status") in ("expired", "revoked"):
+                session.pop('license', None)
+                return LICENSE_HTML
+            # Also check expires_at
+            if key_data.get("expires_at"):
+                if time.time() > key_data["expires_at"]:
+                    key_data["status"] = "expired"
+                    save_license_keys(keys)
+                    session.pop('license', None)
+                    return LICENSE_HTML
     # Tier 2: Check Discord verification
     verified_id = session.get('discord_id') or request.cookies.get('discord_id')
     if not verified_id:
@@ -4651,13 +4846,36 @@ def api_license():
     key = data.get("key", "")
     result = validate_license_key(key)
     if result["valid"]:
+        stored_key = result.get("key", key)
+        keys = load_license_keys()
+        key_data = keys.get(stored_key, {})
         session['license'] = {
             "valid": True,
             "tier": result.get("tier", "basic"),
-            "key": result.get("key", key)
+            "key": stored_key,
+            "expires_at": key_data.get("expires_at")
         }
-        return jsonify({"valid": True, "tier": result.get("tier", "basic")})
+        return jsonify({"valid": True, "tier": result.get("tier", "basic"), "expires_at": key_data.get("expires_at")})
     return jsonify({"valid": False})
+
+@app.route("/api/license/expiry")
+def api_license_expiry():
+    license_data = session.get('license')
+    if not license_data or not license_data.get('key'):
+        return jsonify({"valid": False, "error": "No license in session"})
+    stored_key = license_data.get('key', '')
+    keys = load_license_keys()
+    if stored_key in keys:
+        key_data = keys[stored_key]
+        if key_data.get("status") != "active":
+            return jsonify({"valid": False, "status": key_data.get("status"), "error": "License not active"})
+        expires_at = key_data.get("expires_at")
+        if expires_at:
+            remaining = expires_at - time.time()
+            days_remaining = max(0, int(remaining / 86400))
+            return jsonify({"valid": True, "expires_at": expires_at, "days_remaining": days_remaining, "expired": remaining <= 0})
+        return jsonify({"valid": True, "expires_at": None, "days_remaining": None, "expired": False})
+    return jsonify({"valid": False, "error": "Key not found"})
 
 @app.route("/logout")
 def logout():
@@ -4893,7 +5111,9 @@ def membership_page():
     return "<h1>Membership</h1><p>Membership content coming soon.</p><a href='/'>Back to Dashboard</a>"
 
 def _check_admin_auth():
-    """Return True if session auth or X-Admin-Key header matches ADMIN_KEY."""
+    """Return True if session auth (Glow/Darkusi) or X-Admin-Key header matches ADMIN_KEY."""
+    if session.get('admin_user') in ADMIN_CREDENTIALS:
+        return True
     if session.get('admin_id') or session.get('admin_email'):
         return True
     key_header = request.headers.get('X-Admin-Key', '')
@@ -4923,20 +5143,24 @@ def api_admin_generate_license():
     assigned_to = data.get("assigned_to", "").strip()
     notes = data.get("notes", "").strip()
     manual_key = data.get("manual_key", "").strip().upper()
+    duration_months = data.get("duration_months", 0)
+    if duration_months not in (0, 1, 3, 6, 12):
+        return jsonify({"error": "Invalid duration"}), 400
     if tier not in ("premium", "staff"):
         return jsonify({"error": "Invalid tier"}), 400
     if manual_key:
         new_key = manual_key
     else:
-        new_key = generate_license_key()
+        new_key = generate_license_key(duration_months)
     keys = load_license_keys()
-    keys[new_key] = {"status": "active", "tier": tier, "created": time.time()}
+    keys[new_key] = {"status": "active", "tier": tier, "created": time.time(), "duration_months": duration_months}
+    keys[new_key]["expires_at"] = calc_expiry(duration_months)
     if assigned_to:
         keys[new_key]["assigned_to"] = assigned_to
     if notes:
         keys[new_key]["notes"] = notes
     save_license_keys(keys)
-    return jsonify({"ok": True, "key": new_key, "tier": tier})
+    return jsonify({"ok": True, "key": new_key, "tier": tier, "duration_months": duration_months, "expires_at": keys[new_key]["expires_at"]})
 
 @app.route("/api/admin-revoke-license", methods=["POST"])
 def api_admin_revoke_license():
@@ -5099,8 +5323,22 @@ def admin_login():
     data = request.get_json(silent=True) or {}
     method = data.get("method")
     
+    if method == "username":
+        username = data.get("username", "").strip()
+        password = data.get("password", "")
+        if username in ADMIN_CREDENTIALS:
+            if check_password_hash(ADMIN_CREDENTIALS[username]["password_hash"], password):
+                session['admin_user'] = username
+                return jsonify({"ok": True, "user": username})
+    
     if method == "discord":
         discord_id = data.get("id", "").strip()
+        # Check hardcoded Glow discord_id first
+        for uname, creds in ADMIN_CREDENTIALS.items():
+            if creds.get("discord_id") == discord_id:
+                session['admin_user'] = uname
+                return jsonify({"ok": True})
+        # Fallback to admin_users.json
         admin = load_admin_users()
         if discord_id in admin.get("admins", []) or discord_id == "953177450391683082":
             session['admin_id'] = discord_id
@@ -5124,7 +5362,7 @@ def admin_login():
 
 @app.route("/admin")
 def admin_panel():
-    if not session.get('admin_id') and not session.get('admin_email'):
+    if not session.get('admin_user') and not session.get('admin_id') and not session.get('admin_email'):
         return ADMIN_LOGIN_HTML
     return ADMIN_PANEL_HTML
 
@@ -5397,6 +5635,14 @@ def api_cart_purchase():
 
     return jsonify({"ok": True, "invoice_id": invoice_id, "remaining": stock["count"]})
 
+@app.route("/api/invoice-status/<invoice_id>")
+def api_invoice_status(invoice_id):
+    invoices = load_invoices()
+    for inv in invoices:
+        if inv.get("id") == invoice_id:
+            return jsonify(inv)
+    return jsonify({"error": "Not found"}), 404
+
 @app.route("/api/admin-invoices")
 def api_admin_invoices():
     if not _check_admin_auth():
@@ -5648,6 +5894,10 @@ if __name__ == "__main__":
     monitor_thread = threading.Thread(target=monitor_loop, daemon=True)
     monitor_thread.start()
     
+    # Start license expiry checker
+    license_expiry_thread = threading.Thread(target=license_expiry_loop, daemon=True)
+    license_expiry_thread.start()
+
     # Start daily freebies updater
     daily_freebies_thread = threading.Thread(target=daily_freebies_loop, daemon=True)
     daily_freebies_thread.start()

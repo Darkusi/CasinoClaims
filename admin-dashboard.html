@@ -225,10 +225,22 @@
 <div class="auth-overlay" id="adminAuthOverlay">
     <div class="auth-box">
         <h2><i class="fas fa-shield-alt"></i> Admin Access</h2>
-        <p>Enter the admin key to access this panel.</p>
-        <input type="password" id="adminKeyInput" placeholder="Admin key" autocomplete="off">
-        <div class="auth-msg" id="adminAuthMsg"></div>
-        <button class="btn btn-primary btn-lg" id="adminAuthBtn" style="width:100%">Unlock</button>
+        <p>Sign in with your credentials (Glow / Darkusi)</p>
+        <div class="tabs" style="display:flex;gap:8px;margin-bottom:16px">
+            <div class="tab active" style="flex:1;padding:8px;background:rgba(168,85,247,0.15);border-radius:8px;color:var(--primary);cursor:pointer;font-size:0.82rem;font-weight:600;text-align:center" onclick="showAdminTab('creds')">Username</div>
+            <div class="tab" style="flex:1;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:0.82rem;font-weight:600;text-align:center" onclick="showAdminTab('key')">Admin Key</div>
+        </div>
+        <div id="adminCredsTab">
+            <input type="text" id="adminUsernameInput" placeholder="Username (Glow / Darkusi)" style="margin-bottom:10px">
+            <input type="password" id="adminPasswordInput" placeholder="Password" autocomplete="off" style="margin-bottom:14px">
+            <div class="auth-msg" id="adminCredsMsg"></div>
+            <button class="btn btn-primary btn-lg" id="adminCredsBtn" style="width:100%">Login</button>
+        </div>
+        <div id="adminKeyTab" style="display:none">
+            <input type="password" id="adminKeyInput" placeholder="Admin key" autocomplete="off">
+            <div class="auth-msg" id="adminAuthMsg"></div>
+            <button class="btn btn-primary btn-lg" id="adminAuthBtn" style="width:100%">Unlock</button>
+        </div>
     </div>
 </div>
 
@@ -339,6 +351,16 @@
                             <select id="tierSelect" class="tier-select">
                                 <option value="premium">Premium</option>
                                 <option value="staff">Staff</option>
+                            </select>
+                        </div>
+                        <div class="license-form-group">
+                            <label>Duration</label>
+                            <select id="durationSelect" class="tier-select">
+                                <option value="1">1 Month</option>
+                                <option value="3">3 Months</option>
+                                <option value="6">6 Months</option>
+                                <option value="12">12 Months</option>
+                                <option value="0">Lifetime</option>
                             </select>
                         </div>
                     </div>
@@ -569,6 +591,33 @@ document.addEventListener('DOMContentLoaded', function() {
         initAdmin();
     }
 
+    $('#adminCredsBtn').addEventListener('click', function() {
+        var username = $('#adminUsernameInput').value.trim();
+        var password = $('#adminPasswordInput').value;
+        if (!username || !password) { $('#adminCredsMsg').textContent = 'Enter username and password.'; $('#adminCredsMsg').style.display = 'block'; return; }
+        fetch(API_URL + '/admin-login', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method: 'username', username: username, password: password })
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d.ok) {
+                localStorage.setItem(ADMIN_LS_KEY, 'true');
+                adminGranted = true;
+                $('#adminAuthOverlay').style.display = 'none';
+                initAdmin();
+            } else {
+                $('#adminCredsMsg').textContent = 'Invalid credentials.';
+                $('#adminCredsMsg').style.display = 'block';
+            }
+        }).catch(function() {
+            $('#adminCredsMsg').textContent = 'Server unreachable.';
+            $('#adminCredsMsg').style.display = 'block';
+        });
+    });
+
+    $('#adminPasswordInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') $('#adminCredsBtn').click();
+    });
+
     $('#adminAuthBtn').addEventListener('click', function() {
         var pw = $('#adminKeyInput').value.trim();
         if (pw === ADMIN_KEY || pw === localStorage.getItem('adm_admin_key')) {
@@ -585,6 +634,15 @@ document.addEventListener('DOMContentLoaded', function() {
     $('#adminKeyInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') $('#adminAuthBtn').click();
     });
+
+    window.showAdminTab = function(tab) {
+        var tabs = document.querySelectorAll('#adminAuthOverlay .tabs .tab');
+        tabs.forEach(function(t) { t.style.background = 'rgba(255,255,255,0.05)'; t.style.color = 'var(--text-muted)'; });
+        event.target.style.background = 'rgba(168,85,247,0.15)';
+        event.target.style.color = 'var(--primary)';
+        document.getElementById('adminCredsTab').style.display = tab === 'creds' ? 'block' : 'none';
+        document.getElementById('adminKeyTab').style.display = tab === 'key' ? 'block' : 'none';
+    };
 
     // Nav toggle
     $$('.admin-nav-item[data-section]').forEach(function(item) {
@@ -1093,10 +1151,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Replace the old generateLicense with custom modal version
     window.generateLicense = function() {
         var tier = document.getElementById('tierSelect').value;
+        var duration = parseInt(document.getElementById('durationSelect').value) || 0;
         var key = document.getElementById('licenseKeyInput').value.trim();
         var assigned = document.getElementById('licenseAssignedInput').value.trim();
         var notes = document.getElementById('licenseNotesInput').value.trim();
-        pendingLicenseData = { tier: tier, key: key, assigned: assigned, notes: notes };
+        pendingLicenseData = { tier: tier, duration_months: duration, key: key, assigned: assigned, notes: notes };
 
         var badge = document.getElementById('confirmTierBadge');
         badge.textContent = tier.toUpperCase();
@@ -1109,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function executeGenerateLicense(data) {
-        var body = { tier: data.tier };
+        var body = { tier: data.tier, duration_months: data.duration_months || 0 };
         if (data.key) body.manual_key = data.key;
         if (data.assigned) body.assigned_to = data.assigned;
         if (data.notes) body.notes = data.notes;
