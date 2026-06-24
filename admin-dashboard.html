@@ -63,7 +63,7 @@
         .monitor-table tr:hover td { background: rgba(168,85,247,0.04); }
         .monitor-table .dot-online {
             display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-            background: #22c55e; margin-right: 6px; box-shadow: 0 0 6px rgba(34,197,94,0.4);
+            background: #a855f7; margin-right: 6px; box-shadow: 0 0 6px rgba(168,85,247,0.4);
         }
         .monitor-table .dot-offline {
             display: inline-block; width: 8px; height: 8px; border-radius: 50%;
@@ -80,10 +80,10 @@
         .applicant-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #fff; flex-shrink: 0; }
         .applicant-actions { display: flex; gap: 6px; }
         .btn-sm { padding: 6px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.75rem; transition: all 0.15s; }
-        .btn-approve { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
-        .btn-approve:hover { background: rgba(34,197,94,0.25); }
-        .btn-decline { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
-        .btn-decline:hover { background: rgba(239,68,68,0.25); }
+        .btn-approve { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+        .btn-approve:hover { background: rgba(168,85,247,0.25); }
+        .btn-decline { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+        .btn-decline:hover { background: rgba(168,85,247,0.25); }
         .btn-generate {
             padding: 8px 18px; background: var(--primary); border: none;
             border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem;
@@ -118,7 +118,7 @@
         .key-item .badge-tier { padding: 2px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
         .badge-premium { background: rgba(168,85,247,0.2); color: var(--primary); }
         .badge-basic { background: rgba(255,255,255,0.08); color: var(--text-muted); }
-        .copied-msg { color: #22c55e; font-size: 0.8rem; display: none; margin-left: 8px; }
+        .copied-msg { color: #a855f7; font-size: 0.8rem; display: none; margin-left: 8px; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
         .restock-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
         .restock-current { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: var(--text); font-weight: 500; }
@@ -128,7 +128,7 @@
         .restock-form-group label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .restock-form-group input { padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.85rem; }
         .restock-form-group input:focus { border-color: var(--primary); outline: none; }
-        .restock-msg { font-size: 0.8rem; color: #22c55e; display: none; }
+        .restock-msg { font-size: 0.8rem; color: #a855f7; display: none; }
         .payments-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .payments-count { font-size: 0.85rem; color: var(--text-muted); }
         .invoice-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
@@ -138,10 +138,10 @@
         .invoice-address { font-family: monospace; font-size: 0.75rem; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 4px; }
         .invoice-actions { display: flex; gap: 6px; align-items: center; }
         .invoice-status { padding: 2px 10px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .invoice-status.pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
-        .invoice-status.paid { background: rgba(34,197,94,0.15); color: #22c55e; }
-        .invoice-status.expired { background: rgba(239,68,68,0.15); color: #ef4444; }
-        .invoice-private-key { font-family: monospace; font-size: 0.7rem; color: var(--orange); background: rgba(245,158,11,0.1); padding: 2px 8px; border-radius: 4px; display: none; word-break: break-all; }
+        .invoice-status.pending { background: rgba(168,85,247,0.15); color: #a855f7; }
+        .invoice-status.paid { background: rgba(168,85,247,0.15); color: #a855f7; }
+        .invoice-status.expired { background: rgba(168,85,247,0.15); color: #a855f7; }
+        .invoice-private-key { font-family: monospace; font-size: 0.7rem; color: #a855f7; background: rgba(168,85,247,0.1); padding: 2px 8px; border-radius: 4px; display: none; word-break: break-all; }
         .auth-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.7); display: flex; align-items: center;
@@ -193,16 +193,16 @@
         .admin-settings-card .setting-row label { font-size: 0.8rem; color: var(--text-muted); min-width: 120px; }
         .admin-settings-card .setting-row input, .admin-settings-card .setting-row select { padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 0.82rem; flex: 1; min-width: 140px; }
         .admin-settings-card .setting-row input:focus, .admin-settings-card .setting-row select:focus { border-color: var(--primary); outline: none; }
-        .admin-settings-card .setting-msg { font-size: 0.75rem; color: #22c55e; display: none; }
+        .admin-settings-card .setting-msg { font-size: 0.75rem; color: #a855f7; display: none; }
         .admin-settings-card hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
         .lookup-result { padding: 12px; background: var(--bg); border-radius: 8px; font-size: 0.82rem; margin-top: 8px; }
         .admin-settings-card .danger-btn { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: all 0.15s; }
         .admin-settings-card .danger-btn:hover { background: rgba(239,68,68,0.2); }
         .admin-settings-card .btn-save { background: var(--primary); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
         .admin-settings-card .btn-save:hover { opacity: 0.9; }
-        .badge-tier-staff { background: rgba(59,130,246,0.2); color: #3b82f6; }
-        .license-success-frame { background: rgba(34,197,94,0.08); border: 2px solid #22c55e; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: none; align-items: center; gap: 14px; flex-wrap: wrap; }
-        .license-success-frame .lsf-key { font-family: monospace; font-size: 1.1rem; color: #22c55e; letter-spacing: 2px; font-weight: 700; flex: 1; }
+        .badge-tier-staff { background: rgba(168,85,247,0.2); color: #a855f7; }
+        .license-success-frame { background: rgba(168,85,247,0.08); border: 2px solid #a855f7; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: none; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .license-success-frame .lsf-key { font-family: monospace; font-size: 1.1rem; color: #a855f7; letter-spacing: 2px; font-weight: 700; flex: 1; }
         .license-success-frame .lsf-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .license-success-frame .lsf-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 4px; }
         .license-success-frame .lsf-close:hover { color: var(--text-bright); }
