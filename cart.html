@@ -1,12 +1,12 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cart â€” Claims Casino</title>
+    <title>Cart — Claims Casino</title>
     <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/tiny-secp256k1@2.2.3/js.js"></script>
     <script src="https://unpkg.com/ecpair@2.1.0/dist/ecpair.js"></script>
@@ -165,7 +165,7 @@
                         <div class="invoice-amount" id="invoiceAmount">$299.00</div>
                         <div class="qr-wrap" id="qrWrap"></div>
                         <div class="invoice-address-label">Send to this address</div>
-                        <div class="invoice-address-value" id="invoiceAddress">â€”</div>
+                        <div class="invoice-address-value" id="invoiceAddress">—</div>
                         <button class="invoice-copy-btn" onclick="copyInvoiceAddress()"><i class="fas fa-copy"></i> Copy Address</button>
                     </div>
                 </div>
@@ -370,7 +370,7 @@ function startPaymentPolling(invoiceId) {
     if (paymentPollTimer) { clearInterval(paymentPollTimer); paymentPollTimer = null; }
     var badge = document.getElementById('invoiceStatusBadge');
     if (!badge) return;
-    badge.innerHTML = '<i class="fas fa-clock"></i> Awaiting Payment â€” checking for confirmation...';
+    badge.innerHTML = '<i class="fas fa-clock"></i> Awaiting Payment — checking for confirmation...';
     paymentPollTimer = setInterval(function() {
         fetch(API_URL + '/api/invoice-status/' + encodeURIComponent(invoiceId))
             .then(function(r) { return r.json(); })

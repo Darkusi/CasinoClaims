@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,7 @@
     <title>Claims Casino</title>
     <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -82,7 +82,7 @@
             <span class="live-dot"></span> Live & Monitoring
         </span>
         <div class="letter-animation"><h1 class="split-text">Sweepstakes <span class="accent-text">Monitor</span></h1></div>
-        <p class="hero-subtitle">Elite mod & staff alert system — real-time signals, zero noise</p>
+        <p class="hero-subtitle">Elite mod & staff alert system � real-time signals, zero noise</p>
         <p class="hero-desc">Get instant Discord alerts the moment sweepstakes are posted. Track free SC, free spins, and exclusive offers from 80+ casinos.</p>
         <div class="hero-chip">
             <div class="chip-flipper">
@@ -414,7 +414,7 @@
             var isOnline = userStatuses[i] === 'online';
             var dot = isOnline ? '<span class="live-dot-green"></span>' : '<span class="live-dot-gray"></span>';
             var page = isOnline ? userPages[i] : '<span style="color:var(--text-muted)">Offline</span>';
-            var time = isOnline ? new Date(userSeen[i]).toLocaleTimeString() : '—';
+            var time = isOnline ? new Date(userSeen[i]).toLocaleTimeString() : '�';
             rows += '<tr><td>' + dot + '</td><td>' + fakeNames[i] + '</td><td>' + page + '</td><td>' + time + '</td></tr>';
         }
         if (!showAll && TOTAL_USERS > visibleCount) {
@@ -430,7 +430,7 @@
         setInterval(refreshLiveMonitor, 3000);
     });
 
-    // ── Scroll Nav Highlight ──
+    // -- Scroll Nav Highlight --
     document.addEventListener('DOMContentLoaded', function() {
         var navLinks = document.querySelectorAll('.scroll-nav a');
         if (!navLinks.length) return;

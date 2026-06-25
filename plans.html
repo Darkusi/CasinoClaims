@@ -1,12 +1,12 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plans â€” Claims Casino</title>
+    <title>Plans — Claims Casino</title>
     <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -80,7 +80,7 @@
                 <div class="plan-badge"><i class="fas fa-crown"></i> Currently Full</div>
                 <div class="plan-name">Elite Access</div>
                 <div class="plan-price">$299.00</div>
-                <div class="plan-price-sub">per month â€” all spots currently filled</div>
+                <div class="plan-price-sub">per month — all spots currently filled</div>
                 <ul class="plan-features">
                     <li><i class="fas fa-check"></i> Real-time Reddit monitoring</li>
                     <li><i class="fas fa-check"></i> Instant Discord alerts</li>
@@ -93,12 +93,12 @@
                     <li><i class="fas fa-check"></i> Monthly updates & support</li>
                 </ul>
                 <div class="plan-cta" id="planCta">
-                    <div class="plan-waitlist-msg" id="planSoldOutMsg"><i class="fas fa-hourglass-half"></i> We're full â€” join the waitlist for the next batch</div>
+                    <div class="plan-waitlist-msg" id="planSoldOutMsg"><i class="fas fa-hourglass-half"></i> We're full — join the waitlist for the next batch</div>
                     <button class="btn btn-primary btn-lg pulse-btn" id="waitlistBtn">Join the Waitlist</button>
-                    <div class="limited-badge" id="planLimitedBadge"><span class="limited-dot"></span> 0 SPOTS REMAINING â€” NEXT BATCH TBA</div>
+                    <div class="limited-badge" id="planLimitedBadge"><span class="limited-dot"></span> 0 SPOTS REMAINING — NEXT BATCH TBA</div>
                     <div class="plan-available" id="planAvailable" style="display:none">
                         <div class="plan-stock-bar"><span class="stock-count" id="stockCount">0</span> spots remaining</div>
-                        <button class="btn btn-primary btn-lg" id="addToCartBtn"><i class="fas fa-shopping-cart"></i> Add to Cart â€” $299.00</button>
+                        <button class="btn btn-primary btn-lg" id="addToCartBtn"><i class="fas fa-shopping-cart"></i> Add to Cart — $299.00</button>
                     </div>
                 </div>
             </div>
@@ -244,7 +244,7 @@
             var priceEl = document.querySelector('.plan-price');
             var btn = document.getElementById('addToCartBtn');
             if (priceEl) priceEl.textContent = '$' + price.toFixed(2);
-            if (btn) btn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart â€” $' + price.toFixed(2);
+            if (btn) btn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart — $' + price.toFixed(2);
         }
     }
 
@@ -268,7 +268,7 @@
             } else if (approved) {
                 if (soldOutMsg) soldOutMsg.style.display = 'none';
                 if (waitlistBtn) waitlistBtn.style.display = 'none';
-                if (limitedBadge) { limitedBadge.style.display = 'flex'; limitedBadge.innerHTML = '<span class="limited-dot" style="background:#22c55e"></span> APPROVED â€” PURCHASE YOUR MEMBERSHIP'; }
+                if (limitedBadge) { limitedBadge.style.display = 'flex'; limitedBadge.innerHTML = '<span class="limited-dot" style="background:#22c55e"></span> APPROVED — PURCHASE YOUR MEMBERSHIP'; }
                 if (available) available.style.display = 'flex';
                 if (stockEl) stockEl.textContent = 'Approved';
             } else {
@@ -311,7 +311,7 @@
                         addBtn.innerHTML = '<i class="fas fa-check"></i> Already in Cart';
                     setTimeout(function(){
                         var p = parseFloat(localStorage.getItem('adm_price')) || 299.00;
-                        addBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart â€” $' + p.toFixed(2);
+                        addBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart — $' + p.toFixed(2);
                     }, 1500);
                 }
             });
